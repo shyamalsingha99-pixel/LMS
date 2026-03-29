@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#F6F5F0">
+<title>BookBites</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   DESIGN SYSTEM — Editorial/Magazine Aesthetic
+   Warm ivory + terracotta + ink navy
+   ══════════════════════════════════════════ */
+:root {
+  --ivory: #F6F5F0;
+  --cream: #EDEBE4;
+  --sand: #E0DDD4;
+  --ink: #1C1917;
+  --ink70: rgba(28,25,23,0.7);
+  --ink40: rgba(28,25,23,0.4);
+  --ink15: rgba(28,25,23,0.15);
+  --ink08: rgba(28,25,23,0.08);
+  --ink04: rgba(28,25,23,0.04);
+  --terracotta: #C2553A;
+  --terracotta-light: #F4E0DA;
+  --sage: #6B8F71;
+  --sage-light: #E2EDE3;
+  --navy: #2C3E6B;
+  --navy-light: #DFE4EF;
+  --amber: #C49A2A;
+  --amber-light: #F5EDD3;
+  --plum: #7B4F7B;
+  --plum-light: #EDE0ED;
+  --white: #FFFFFF;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow-sm: 0 1px 4px rgba(28,25,23,0.06);
+  --shadow-md: 0 4px 16px rgba(28,25,23,0.08);
+  --shadow-lg: 0 8px 32px rgba(28,25,23,0.12);
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Source Sans 3', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --nav-h: 64px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { height:100%; overflow:hidden; }
+body {
+  font-family: var(--font-body);
+  background: var(--ivory);
+  color: var(--ink);
+  height: 100%; overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ═══ SCREEN MANAGER ═══ */
+.screen { display:none; height:calc(100% - var(--nav-h)); overflow-y:auto; }
+.screen.active { display:block; }
+
+/* ═══ BOTTOM NAV ═══ */
+.nav {
+  position:fixed; bottom:0; left:0; right:0; z-index:100;
+  height: var(--nav-h);
+  background: var(--white);
+  border-top: 1px solid var(--ink08);
+  display:flex; align-items:stretch;
+}
+.nav-btn {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:3px;
+  background:none; border:none; font-family:var(--font-body);
+  font-size:10px; font-weight:600; color:var(--ink40);
+  cursor:pointer; transition:color 0.2s; letter-spacing:0.3px;
+  text-transform:uppercase; padding-bottom:4px;
+}
+.nav-btn .nav-icon { font-size:22px; transition:transform 0.2s; }
+.nav-btn.active { color:var(--terracotta); }
+.nav-btn.active .nav-icon { transform:scale(1.15); }
+@media(min-width:768px){
+  .nav { max-width:480px; left:50%; transform:translateX(-50%); border-radius:20px 20px 0 0; }
+}
+
+/* ═══════════════════════
+   TODAY SCREEN
+   ═══════════════════════ */
+.today-screen { padding:0 0 20px; }
+.today-header {
+  padding:48px 24px 32px;
+  background: linear-gradient(170deg, var(--cream) 0%, var(--ivory) 100%);
+  position:relative; overflow:hidden;
+}
+.today-header::before {
+  content:''; position:absolute; top:-40px; right:-40px;
+  width:180px; height:180px; border-radius:50%;
+  background: radial-gradient(circle, var(--terracotta-light) 0%, transparent 70%);
+  opacity:0.6;
+}
+.today-greeting { font-family:var(--font-display); font-size:28px; line-height:1.25; margin-bottom:4px; position:relative; }
+.today-date { font-size:13px; color:var(--ink40); font-weight:500; position:relative; }
+
+.today-pulse {
+  margin:24px; padding:20px; background:var(--white);
+  border-radius:var(--radius); box-shadow:var(--shadow-sm);
+  display:flex; align-items:center; gap:18px;
+}
+.pulse-ring {
+  width:64px; height:64px; position:relative; flex-shrink:0;
+}
+.pulse-ring svg { width:64px; height:64px; transform:rotate(-90deg); }
+.pulse-ring .track { fill:none; stroke:var(--ink08); stroke-width:5; }
+.pulse-ring .fill { fill:none; stroke:var(--sage); stroke-width:5; stroke-linecap:round; transition:stroke-dashoffset 1s ease; }
+.pulse-pct {
+  position:absolute; inset:0; display:flex; align-items:center;
+  justify-content:center; font-family:var(--font-mono); font-size:15px;
+  font-weight:500; color:var(--ink);
+}
+.pulse-info h3 { font-size:14px; font-weight:700; margin-bottom:2px; }
+.pulse-info p { font-size:12px; color:var(--ink40); line-height:1.4; }
+
+.today-card-wrapper { padding:0 24px; margin-top:8px; }
+.today-concept-card {
+  background:var(--white); border-radius:var(--radius);
+  box-shadow:var(--shadow-md); overflow:hidden;
+  animation: fadeSlideUp 0.5s ease both;
+}
+@keyframes fadeSlideUp {
+  from { opacity:0; transform:translateY(16px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.today-card-visual {
+  height:140px; display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+}
+.today-card-visual .visual-pattern {
+  position:absolute; inset:0; opacity:0.15;
+}
+.today-card-visual .visual-icon {
+  font-size:48px; position:relative; z-index:1;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,0.1));
+}
+.today-card-visual .visual-title {
+  position:absolute; bottom:12px; left:16px; right:16px;
+  font-family:var(--font-display); font-size:18px; color:var(--white);
+  text-shadow:0 1px 8px rgba(0,0,0,0.3); z-index:2;
+}
+.today-card-body { padding:18px 18px 20px; }
+.today-card-body .book-label {
+  font-size:10px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.8px; margin-bottom:6px; display:flex; align-items:center; gap:6px;
+}
+.today-card-body .book-label .dot { width:6px; height:6px; border-radius:50%; }
+.today-card-body .insight-text { font-size:14px; line-height:1.6; color:var(--ink70); }
+.today-card-body .action-box {
+  margin-top:14px; padding:12px 14px; border-radius:var(--radius-sm);
+  font-size:13px; line-height:1.5;
+}
+.today-card-body .action-box strong {
+  display:block; font-size:10px; text-transform:uppercase;
+  letter-spacing:0.8px; margin-bottom:4px; opacity:0.7;
+}
+.today-card-actions {
+  display:flex; gap:8px; padding:0 18px 18px;
+}
+.today-card-actions button {
+  flex:1; padding:11px 8px; border-radius:var(--radius-sm);
+  border:1.5px solid var(--ink08); background:var(--ivory);
+  font-family:var(--font-body); font-size:12px; font-weight:700;
+  cursor:pointer; transition:all 0.2s;
+}
+.today-card-actions .btn-got:hover { background:var(--sage-light); border-color:var(--sage); }
+.today-card-actions .btn-shaky:hover { background:var(--amber-light); border-color:var(--amber); }
+.today-card-actions .btn-new:hover { background:var(--terracotta-light); border-color:var(--terracotta); }
+
+.today-yesterday {
+  margin:20px 24px 0; padding:16px; background:var(--white);
+  border-radius:var(--radius); box-shadow:var(--shadow-sm);
+}
+.today-yesterday h4 { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--ink40); margin-bottom:8px; }
+.today-yesterday p { font-size:13px; color:var(--ink70); line-height:1.5; margin-bottom:10px; }
+.today-yesterday .used-btns { display:flex; gap:8px; }
+.today-yesterday .used-btns button {
+  padding:8px 16px; border-radius:20px; border:1.5px solid var(--ink08);
+  background:var(--ivory); font-family:var(--font-body); font-size:12px;
+  font-weight:600; cursor:pointer; transition:all 0.2s;
+}
+.today-yesterday .used-btns button:hover { background:var(--sage-light); border-color:var(--sage); }
+
+/* ═══════════════════════
+   LEARN SCREEN
+   ═══════════════════════ */
+.learn-screen { padding:0 0 20px; }
+.learn-header {
+  padding:32px 24px 20px;
+  background:var(--cream);
+}
+.learn-header h2 { font-family:var(--font-display); font-size:24px; margin-bottom:4px; }
+.learn-header p { font-size:13px; color:var(--ink40); }
+
+/* Book selector pills */
+.book-selector {
+  padding:16px 24px; display:flex; gap:8px;
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+}
+.book-selector::-webkit-scrollbar { display:none; }
+.book-pill {
+  flex-shrink:0; padding:8px 16px; border-radius:20px;
+  border:1.5px solid var(--ink08); background:var(--white);
+  font-family:var(--font-body); font-size:12px; font-weight:600;
+  cursor:pointer; transition:all 0.2s; white-space:nowrap;
+  display:flex; align-items:center; gap:6px;
+}
+.book-pill .pill-dot { width:8px; height:8px; border-radius:50%; }
+.book-pill.active { border-color:var(--ink); background:var(--ink); color:var(--white); }
+.book-pill.add-pill { border-style:dashed; color:var(--ink40); }
+
+/* Chapter progress */
+.chapter-track {
+  padding:0 24px; margin:4px 0 12px;
+}
+.chapter-bar {
+  display:flex; gap:3px; margin-bottom:8px;
+}
+.chapter-seg {
+  flex:1; height:6px; border-radius:3px; background:var(--ink08);
+  transition:background 0.3s; cursor:pointer; position:relative;
+}
+.chapter-seg.unlocked { background:var(--sand); }
+.chapter-seg.current { background:var(--terracotta); }
+.chapter-seg.mastered { background:var(--sage); }
+.chapter-label {
+  font-size:11px; color:var(--ink40); font-weight:500;
+}
+.chapter-purpose {
+  margin:0 24px 16px; padding:12px 14px; border-radius:var(--radius-sm);
+  background:var(--amber-light); font-size:12px; line-height:1.5;
+  color:var(--amber); display:flex; align-items:flex-start; gap:8px;
+}
+.chapter-purpose span { font-size:16px; flex-shrink:0; }
+
+/* Learn cards area */
+.learn-cards { padding:0 24px; }
+.learn-card {
+  background:var(--white); border-radius:var(--radius);
+  box-shadow:var(--shadow-md); overflow:hidden;
+  margin-bottom:16px; animation: fadeSlideUp 0.4s ease both;
+}
+.learn-card-visual {
+  height:120px; display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+}
+.learn-card-visual .v-bg { position:absolute; inset:0; }
+.learn-card-visual .v-content {
+  position:relative; z-index:1; text-align:center; padding:16px;
+  color:var(--white); max-width:90%;
+}
+.learn-card-visual .v-content h3 {
+  font-family:var(--font-display); font-size:18px; line-height:1.3;
+  text-shadow:0 1px 6px rgba(0,0,0,0.25);
+}
+.learn-card-visual .v-content .v-sub {
+  font-size:10px; text-transform:uppercase; letter-spacing:1px; opacity:0.8; margin-top:4px;
+}
+.learn-card-body { padding:16px 18px 18px; }
+.learn-card-body .lc-type {
+  display:inline-block; padding:3px 8px; border-radius:6px;
+  font-size:9px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.8px; margin-bottom:8px;
+}
+.learn-card-body .lc-insight { font-size:14px; line-height:1.6; color:var(--ink70); margin-bottom:12px; }
+.learn-card-body .lc-story {
+  padding:12px; border-radius:var(--radius-sm); background:var(--ivory);
+  font-size:13px; line-height:1.55; color:var(--ink70); margin-bottom:12px;
+  border-left:3px solid var(--sand);
+}
+.learn-card-body .lc-story strong { font-size:10px; text-transform:uppercase; letter-spacing:0.8px; display:block; margin-bottom:4px; color:var(--ink40); }
+.learn-card-body .lc-scenario {
+  padding:12px; border-radius:var(--radius-sm); border:1.5px solid var(--ink08);
+  margin-bottom:12px;
+}
+.learn-card-body .lc-scenario strong { font-size:10px; text-transform:uppercase; letter-spacing:0.8px; display:block; margin-bottom:4px; color:var(--terracotta); }
+.learn-card-body .lc-scenario p { font-size:13px; line-height:1.55; color:var(--ink70); }
+.learn-card-body .lc-action {
+  padding:12px 14px; border-radius:var(--radius-sm); margin-bottom:4px;
+}
+.learn-card-body .lc-action strong { font-size:10px; text-transform:uppercase; letter-spacing:0.8px; display:block; margin-bottom:4px; opacity:0.7; }
+.learn-card-body .lc-action p { font-size:13px; line-height:1.5; }
+.learn-card-rating {
+  display:flex; gap:8px; padding:0 18px 18px;
+}
+.learn-card-rating button {
+  flex:1; padding:11px 8px; border-radius:var(--radius-sm);
+  border:1.5px solid var(--ink08); background:var(--ivory);
+  font-family:var(--font-body); font-size:12px; font-weight:700;
+  cursor:pointer; transition:all 0.2s;
+}
+.learn-card-rating .r-got:hover { background:var(--sage-light); border-color:var(--sage); }
+.learn-card-rating .r-shaky:hover { background:var(--amber-light); border-color:var(--amber); }
+.learn-card-rating .r-revisit:hover { background:var(--terracotta-light); border-color:var(--terracotta); }
+
+/* Diagnostic */
+.diagnostic-container {
+  padding:24px; max-width:520px; margin:0 auto;
+}
+.diag-title { font-family:var(--font-display); font-size:22px; margin-bottom:4px; }
+.diag-subtitle { font-size:13px; color:var(--ink40); margin-bottom:20px; }
+.diag-question {
+  background:var(--white); border-radius:var(--radius); padding:18px;
+  box-shadow:var(--shadow-sm); margin-bottom:16px;
+  animation: fadeSlideUp 0.3s ease both;
+}
+.diag-q-num { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--ink40); margin-bottom:6px; }
+.diag-q-text { font-size:15px; line-height:1.55; color:var(--ink); margin-bottom:14px; }
+.diag-options { display:flex; flex-direction:column; gap:8px; }
+.diag-opt {
+  padding:12px 14px; border-radius:var(--radius-sm);
+  border:1.5px solid var(--ink08); background:var(--ivory);
+  font-family:var(--font-body); font-size:13px; cursor:pointer;
+  transition:all 0.2s; text-align:left; line-height:1.45;
+}
+.diag-opt:hover { border-color:var(--terracotta); background:var(--terracotta-light); }
+.diag-opt.selected { border-color:var(--terracotta); background:var(--terracotta-light); font-weight:600; }
+.diag-progress { display:flex; gap:4px; margin-bottom:20px; }
+.diag-progress .dp { flex:1; height:4px; border-radius:2px; background:var(--ink08); transition:background 0.3s; }
+.diag-progress .dp.done { background:var(--sage); }
+.diag-progress .dp.current { background:var(--terracotta); }
+.diag-nav { display:flex; gap:8px; margin-top:16px; }
+.diag-nav button {
+  flex:1; padding:12px; border-radius:var(--radius-sm); border:none;
+  font-family:var(--font-body); font-size:14px; font-weight:700;
+  cursor:pointer; transition:all 0.2s;
+}
+.diag-nav .btn-next { background:var(--ink); color:var(--white); }
+.diag-nav .btn-skip { background:var(--ivory); color:var(--ink40); border:1.5px solid var(--ink08); }
+
+/* Assess results */
+.assess-results {
+  padding:24px; max-width:520px; margin:0 auto;
+}
+.assess-results h2 { font-family:var(--font-display); font-size:24px; margin-bottom:16px; }
+.radar-placeholder {
+  background:var(--white); border-radius:var(--radius); padding:20px;
+  box-shadow:var(--shadow-sm); margin-bottom:20px; min-height:200px;
+  display:flex; align-items:center; justify-content:center;
+}
+.assess-gaps { margin-bottom:20px; }
+.gap-item {
+  padding:12px 16px; background:var(--white); border-radius:var(--radius-sm);
+  margin-bottom:8px; box-shadow:var(--shadow-sm);
+  display:flex; align-items:center; gap:12px;
+}
+.gap-bar-bg { flex:1; height:8px; border-radius:4px; background:var(--ink08); }
+.gap-bar-fill { height:8px; border-radius:4px; transition:width 1s ease; }
+.gap-label { font-size:12px; font-weight:600; min-width:90px; }
+.gap-pct { font-size:12px; font-weight:700; font-family:var(--font-mono); min-width:36px; text-align:right; }
+
+.assess-btn {
+  width:100%; padding:14px; border-radius:var(--radius-sm);
+  border:none; background:var(--terracotta); color:var(--white);
+  font-family:var(--font-body); font-size:14px; font-weight:700;
+  cursor:pointer; transition:all 0.2s; margin-top:8px;
+}
+.assess-btn:hover { filter:brightness(1.1); }
+
+/* ═══════════════════════
+   LIBRARY SCREEN (Pinterest)
+   ═══════════════════════ */
+.library-screen { padding:0 0 20px; }
+.library-header {
+  padding:32px 24px 16px; background:var(--cream);
+}
+.library-header h2 { font-family:var(--font-display); font-size:24px; margin-bottom:4px; }
+.library-header p { font-size:13px; color:var(--ink40); }
+.library-filters {
+  padding:12px 24px; display:flex; gap:6px; overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.library-filters::-webkit-scrollbar { display:none; }
+.lib-chip {
+  flex-shrink:0; padding:6px 14px; border-radius:16px;
+  border:1.5px solid var(--ink08); background:var(--white);
+  font-size:11px; font-weight:600; cursor:pointer; transition:all 0.2s;
+  text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap;
+}
+.lib-chip:hover { border-color:var(--terracotta); }
+.lib-chip.active { background:var(--ink); color:var(--white); border-color:var(--ink); }
+
+.masonry {
+  padding:8px 16px; column-count:2; column-gap:12px;
+}
+@media(min-width:768px){ .masonry { column-count:3; padding:8px 24px; } }
+@media(min-width:1100px){ .masonry { column-count:4; } }
+
+.m-card {
+  break-inside:avoid; margin-bottom:12px;
+  border-radius:var(--radius); overflow:hidden;
+  box-shadow:var(--shadow-sm); cursor:pointer;
+  transition:box-shadow 0.3s, transform 0.3s;
+  animation: fadeSlideUp 0.4s ease both;
+}
+.m-card:hover { box-shadow:var(--shadow-lg); transform:translateY(-2px); }
+
+/* Card visual templates */
+.m-card-visual {
+  position:relative; overflow:hidden; min-height:80px;
+  display:flex; align-items:center; justify-content:center; padding:16px;
+}
+.m-card-visual .mv-bg { position:absolute; inset:0; }
+.m-card-visual .mv-text {
+  position:relative; z-index:1; color:var(--white);
+  font-family:var(--font-display); font-size:15px;
+  line-height:1.35; text-align:center;
+  text-shadow:0 1px 6px rgba(0,0,0,0.2); max-width:95%;
+}
+/* Template variants */
+.tpl-gradient .mv-bg { background: linear-gradient(135deg, var(--c1), var(--c2)); }
+.tpl-diagonal .mv-bg {
+  background: var(--c1);
+}
+.tpl-diagonal .mv-bg::after {
+  content:''; position:absolute; bottom:0; right:0;
+  width:70%; height:70%;
+  background:var(--c2); clip-path:polygon(100% 0,100% 100%,0 100%);
+  opacity:0.5;
+}
+.tpl-circles .mv-bg { background:var(--c1); }
+.tpl-circles .mv-bg::before {
+  content:''; position:absolute; top:-20%; right:-20%;
+  width:60%; height:120%; border-radius:50%;
+  background:var(--c2); opacity:0.3;
+}
+.tpl-circles .mv-bg::after {
+  content:''; position:absolute; bottom:-30%; left:-10%;
+  width:50%; height:100%; border-radius:50%;
+  background:var(--c2); opacity:0.2;
+}
+.tpl-quote .mv-bg { background:var(--c1); }
+.tpl-quote .mv-text {
+  font-style:italic; font-size:16px; line-height:1.45;
+  border-left:3px solid rgba(255,255,255,0.5); padding-left:12px;
+  text-align:left;
+}
+.tpl-bold .mv-bg { background:var(--c1); }
+.tpl-bold .mv-text {
+  font-family:var(--font-body); font-weight:700; font-size:14px;
+  text-transform:uppercase; letter-spacing:1px;
+}
+.tpl-framework .mv-bg { background:var(--c1); }
+.tpl-framework .mv-text {
+  font-family:var(--font-mono); font-size:12px; line-height:1.7;
+  text-align:left; background:rgba(0,0,0,0.15); padding:10px 12px;
+  border-radius:8px; white-space:pre-line;
+}
+
+.m-card-body { background:var(--white); padding:14px; }
+.m-card-body .mc-type {
+  display:inline-block; padding:2px 7px; border-radius:5px;
+  font-size:8px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.7px; margin-bottom:6px;
+}
+.m-card-body .mc-title { font-family:var(--font-display); font-size:14px; line-height:1.3; margin-bottom:4px; }
+.m-card-body .mc-book { font-size:10px; color:var(--ink40); font-weight:500; display:flex; align-items:center; gap:4px; }
+.m-card-body .mc-book .dot { width:5px; height:5px; border-radius:50%; }
+.m-card-body .mc-tags { display:flex; flex-wrap:wrap; gap:3px; margin-top:6px; }
+.m-card-body .mc-tag { font-size:8px; padding:2px 6px; border-radius:6px; background:var(--cream); color:var(--ink40); font-weight:600; }
+.m-card-status { position:absolute; top:8px; right:8px; font-size:12px; z-index:2; }
+.m-card-used {
+  padding:8px 14px; background:var(--ivory); font-size:11px;
+  color:var(--ink40); display:flex; align-items:center; gap:6px;
+  cursor:pointer; transition:all 0.2s;
+}
+.m-card-used:hover { background:var(--sage-light); color:var(--sage); }
+
+/* ═══════════════════════
+   MODAL (shared)
+   ═══════════════════════ */
+.modal-overlay {
+  display:none; position:fixed; inset:0; z-index:200;
+  background:rgba(28,25,23,0.45);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  justify-content:center; align-items:flex-end;
+}
+.modal-overlay.open { display:flex; }
+@media(min-width:768px){ .modal-overlay.open { align-items:center; padding:24px; } }
+.modal-panel {
+  background:var(--white);
+  border-radius:20px 20px 0 0; width:100%;
+  max-height:88vh; overflow-y:auto;
+  animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+@media(min-width:768px){ .modal-panel { max-width:520px; border-radius:20px; } }
+@keyframes slideUp {
+  from { transform:translateY(100%); opacity:0; }
+  to { transform:translateY(0); opacity:1; }
+}
+.modal-handle {
+  width:36px; height:4px; border-radius:2px;
+  background:var(--ink15); margin:10px auto 0;
+}
+.modal-head {
+  padding:16px 20px 0; display:flex; justify-content:space-between; align-items:flex-start;
+}
+.modal-head-info { flex:1; }
+.modal-head-info .mh-book { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--ink40); margin-bottom:4px; }
+.modal-head-info h2 { font-family:var(--font-display); font-size:21px; line-height:1.3; }
+.modal-close {
+  width:32px; height:32px; border-radius:50%;
+  background:var(--ink04); border:none; font-size:15px;
+  cursor:pointer; display:flex; align-items:center;
+  justify-content:center; color:var(--ink40); flex-shrink:0;
+}
+.modal-section { padding:16px 20px; border-top:1px solid var(--ink04); }
+.modal-section:first-of-type { border:none; }
+.ms-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--ink40); margin-bottom:6px; }
+.ms-text { font-size:14px; line-height:1.6; color:var(--ink70); }
+.ms-action {
+  padding:12px 14px; border-radius:var(--radius-sm); margin-top:8px;
+  font-size:13px; line-height:1.5;
+}
+.ms-action strong { display:block; font-size:10px; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:3px; opacity:0.7; }
+.modal-rating { display:flex; gap:8px; padding:8px 20px 24px; }
+.modal-rating button {
+  flex:1; padding:12px 8px; border-radius:var(--radius-sm);
+  border:1.5px solid var(--ink08); background:var(--ivory);
+  font-family:var(--font-body); font-size:12px; font-weight:700;
+  cursor:pointer; transition:all 0.2s;
+}
+.modal-rating .mr-got:hover { background:var(--sage-light); border-color:var(--sage); }
+.modal-rating .mr-shaky:hover { background:var(--amber-light); border-color:var(--amber); }
+.modal-rating .mr-revisit:hover { background:var(--terracotta-light); border-color:var(--terracotta); }
+.ms-bridges { display:flex; flex-wrap:wrap; gap:6px; }
+.ms-bridge-link {
+  padding:6px 12px; border-radius:8px; background:var(--cream);
+  font-size:11px; font-weight:600; color:var(--navy);
+  cursor:pointer; transition:background 0.2s;
+}
+.ms-bridge-link:hover { background:var(--navy-light); }
+
+/* ═══════════════════════
+   ADD BOOK MODAL
+   ═══════════════════════ */
+.add-overlay {
+  display:none; position:fixed; inset:0; z-index:300;
+  background:rgba(28,25,23,0.45);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  justify-content:center; align-items:flex-end;
+}
+.add-overlay.open { display:flex; }
+@media(min-width:768px){ .add-overlay.open { align-items:center; } }
+.add-panel {
+  background:var(--white); border-radius:20px 20px 0 0;
+  width:100%; max-height:85vh; overflow-y:auto;
+  padding:24px 20px 32px;
+  animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+@media(min-width:768px){ .add-panel { max-width:480px; border-radius:20px; } }
+.add-panel h2 { font-family:var(--font-display); font-size:22px; margin-bottom:4px; }
+.add-panel .add-sub { font-size:13px; color:var(--ink40); margin-bottom:16px; }
+.add-panel input, .add-panel textarea {
+  width:100%; border:1.5px solid var(--ink08); border-radius:var(--radius-sm);
+  padding:12px 14px; font-family:var(--font-body); font-size:14px;
+  outline:none; transition:border-color 0.2s; background:var(--ivory);
+}
+.add-panel input:focus, .add-panel textarea:focus { border-color:var(--terracotta); }
+.add-panel textarea { min-height:60px; resize:vertical; margin-top:10px; }
+.add-panel label {
+  display:block; font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.8px; color:var(--ink40); margin-bottom:6px; margin-top:14px;
+}
+.add-btns { display:flex; gap:8px; margin-top:18px; }
+.add-btns button {
+  flex:1; padding:13px; border-radius:var(--radius-sm); border:none;
+  font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer;
+}
+.add-cancel { background:var(--cream); color:var(--ink40); }
+.add-generate { background:var(--terracotta); color:var(--white); }
+
+/* Loading animation */
+.loading-screen {
+  display:none; padding:60px 24px; text-align:center;
+}
+.loading-screen.active { display:block; }
+.loading-spinner {
+  width:40px; height:40px; border:3px solid var(--ink08);
+  border-top-color:var(--terracotta); border-radius:50%;
+  animation:spin 0.8s linear infinite; margin:0 auto 16px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-screen p { font-size:14px; color:var(--ink40); }
+
+/* Utility */
+.hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ SCREENS ═══ -->
+
+<!-- TODAY -->
+<div class="screen active" id="screenToday">
+  <div class="today-screen" id="todayContent"></div>
+</div>
+
+<!-- LEARN -->
+<div class="screen" id="screenLearn">
+  <div class="learn-screen">
+    <div class="learn-header">
+      <h2>Learn</h2>
+      <p>Master concepts chapter by chapter</p>
+    </div>
+    <div class="book-selector" id="bookSelector"></div>
+    <div id="learnArea"></div>
+  </div>
+</div>
+
+<!-- LIBRARY -->
+<div class="screen" id="screenLibrary">
+  <div class="library-screen">
+    <div class="library-header">
+      <h2>Library</h2>
+      <p>Your growing knowledge wall</p>
+    </div>
+    <div class="library-filters" id="libFilters"></div>
+    <div class="masonry" id="masonry"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-panel" id="modalPanel"></div>
+</div>
+
+<!-- ADD BOOK MODAL -->
+<div class="add-overlay" id="addOverlay">
+  <div class="add-panel">
+    <h2>Add a Book</h2>
+    <p class="add-sub">Claude will generate diagnostics, insights & visual cards</p>
+    <label>Book Title</label>
+    <input type="text" id="addBookTitle" placeholder="e.g. Atomic Habits">
+    <label>Why are you learning this?</label>
+    <textarea id="addBookWhy" placeholder="e.g. To build better daily routines for my team"></textarea>
+    <div class="add-btns">
+      <button class="add-cancel" onclick="closeAddBook()">Cancel</button>
+      <button class="add-generate" onclick="generateBook()">Generate Cards</button>
+    </div>
+    <div class="loading-screen" id="addLoading">
+      <div class="loading-spinner"></div>
+      <p id="loadingMsg">Claude is reading the book...</p>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+  <button class="nav-btn active" data-screen="screenToday" onclick="switchScreen('screenToday',this)">
+    <span class="nav-icon">☀️</span>Today
+  </button>
+  <button class="nav-btn" data-screen="screenLearn" onclick="switchScreen('screenLearn',this)">
+    <span class="nav-icon">📖</span>Learn
+  </button>
+  <button class="nav-btn" data-screen="screenLibrary" onclick="switchScreen('screenLibrary',this)">
+    <span class="nav-icon">📌</span>Library
+  </button>
+  <button class="nav-btn" onclick="openAddBook()">
+    <span class="nav-icon">➕</span>Add
+  </button>
+</nav>
+
+<script>
+// ═══════════════════════════════════════
+// DATA & STATE
+// ═══════════════════════════════════════
+
+const BOOK_THEMES = {
+  'NLP at Work': {
+    c1:'#C2553A', c2:'#E8845A', light:'#F4E0DA',
+    icon:'🧠', chapters:['Foundations','Filters & Maps','Rapport','Precision Language','Outcomes & Goals','Representational Systems']
+  },
+  'Words That Change Minds': {
+    c1:'#2C3E6B', c2:'#5A6FA8', light:'#DFE4EF',
+    icon:'🎯', chapters:['Motivation Traits','Productivity Patterns','Decision Factors','Working Traits','Influencing With Language']
+  }
+};
+
+const TEMPLATES = ['tpl-gradient','tpl-diagonal','tpl-circles','tpl-quote','tpl-bold','tpl-framework'];
+
+function pickTemplate(cardType) {
+  if (cardType === 'quote') return 'tpl-quote';
+  if (cardType === 'framework') return 'tpl-framework';
+  if (cardType === 'challenge') return 'tpl-bold';
+  return TEMPLATES[Math.floor(Math.random()*3)]; // first 3 for regular
+}
+
+const TYPE_BADGES = {
+  concept: { label:'💡 Concept', bg:'#EDE9FE', color:'#5B21B6' },
+  quote: { label:'💬 Quote', bg:'#FEF3C7', color:'#B45309' },
+  framework: { label:'📐 Framework', bg:'#D1FAE5', color:'#065F46' },
+  challenge: { label:'🔥 Challenge', bg:'#FEE2E2', color:'#B91C1C' },
+  bridge: { label:'🔗 Bridge', bg:'#DBEAFE', color:'#1E40AF' }
+};
+
+// Pre-loaded cards
+const PRELOADED = [
+  {
+    id:'nlp01', book:'NLP at Work', chapter:0, cardType:'concept',
+    title:'The Map is Not the Territory',
+    insight:'Every person operates from their own mental map of reality — not reality itself. Conflicts arise when we assume our map is THE map.',
+    story:'Two managers given the same data reach opposite conclusions — neither is wrong, they\'re reading different maps built from different experiences.',
+    scenario:'Your TL disagrees with your approach to a process change. Before reacting, ask: "What map are they reading that makes this logical to them?"',
+    action:'In your next disagreement today, pause and say internally: "Their map, not mine." Then ask one curious question before responding.',
+    tags:['communication','self-awareness','leadership'], status:'new',
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  },
+  {
+    id:'nlp02', book:'NLP at Work', chapter:1, cardType:'framework',
+    title:'Deletion, Distortion, Generalization',
+    insight:'Our brain processes 2M bits/sec but consciousness handles only 134. Three filters do the heavy lifting: Deletion (ignoring), Distortion (changing meaning), Generalization (rules from few examples).',
+    story:'An employee says "nobody ever listens to us." This is generalization — converting one or two experiences into a universal rule.',
+    scenario:'A team member says "This always happens." Which filter is at work? What question would challenge it respectfully?',
+    action:'Listen for one generalization today — words like "always," "never," "everyone." Gently ask: "Can you think of one exception?"',
+    framework:'🗑️ DELETION\n→ What are they NOT noticing?\n\n🔀 DISTORTION\n→ What meaning are they adding?\n\n🔄 GENERALIZATION\n→ What rule from too few examples?',
+    tags:['communication','leadership','persuasion'], status:'new',
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  },
+  {
+    id:'nlp03', book:'NLP at Work', chapter:2, cardType:'concept',
+    title:'Matching & Mirroring for Rapport',
+    insight:'Rapport isn\'t liking someone — it\'s creating unconscious "sameness." Subtly matching posture, voice pace, and breathing builds trust faster than words.',
+    story:'A consultant walked into a hostile meeting, matched the client\'s crossed arms and slow speech. Within 10 minutes, the client uncrossed and started collaborating.',
+    scenario:'You\'re in a 1:1 with a resistant TL. Arms crossed, voice flat. What two things would you match before giving feedback?',
+    action:'In your next meeting, consciously match ONE thing — speaking pace OR posture — for 5 minutes. Notice what shifts.',
+    tags:['communication','leadership','persuasion'], status:'new',
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  },
+  {
+    id:'nlp04', book:'NLP at Work', chapter:3, cardType:'concept',
+    title:'Meta Model: Recovering Deleted Info',
+    insight:'When people speak vaguely ("It\'s a problem"), critical information is deleted. The Meta Model gives you surgical questions to recover what\'s missing.',
+    story:'Manager hears "The process isn\'t working." Instead of fixing it, asks: "Which specific step?" Turns out it\'s one step, not the whole process.',
+    scenario:'An employee says "Quality is suffering." What 3 precision questions would unpack this?',
+    action:'When someone makes a vague complaint today, resist solving it. Instead ask: "Specifically, which part?"',
+    tags:['communication','leadership','decision-making'], status:'new',
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  },
+  {
+    id:'nlp05', book:'NLP at Work', chapter:3, cardType:'quote',
+    title:'The meaning of your communication is the response you get',
+    insight:'You intended encouragement but they heard criticism. NLP says the response IS the meaning — not your intention. Responsibility shifts to the communicator.',
+    story:'',
+    scenario:'You gave feedback to a TL intending to motivate, but they looked deflated. Using this principle, who needs to adjust?',
+    action:'After giving any instruction today, watch the response. If not what you wanted, change YOUR communication.',
+    tags:['communication','self-awareness','leadership'], status:'new',
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  },
+  {
+    id:'nlp06', book:'NLP at Work', chapter:4, cardType:'concept',
+    title:'Well-Formed Outcomes',
+    insight:'Most people define what they DON\'T want. NLP insists outcomes must be: stated positively, within your control, specific, with sensory evidence of achievement.',
+    story:'A TL said "I want fewer errors." Reframed: "I want 98% accuracy on first pass, verified by QC scores by March 30."',
+    scenario:'Your goal is "improve TL discipline." Rewrite as a well-formed outcome using the 4 criteria.',
+    action:'Take one fuzzy goal you have. Rewrite it: positive, specific, within your control, with measurable evidence.',
+    tags:['leadership','decision-making','self-awareness'], status:'new',
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  },
+  {
+    id:'nlp07', book:'NLP at Work', chapter:5, cardType:'concept',
+    title:'VAK: Visual, Auditory, Kinesthetic',
+    insight:'People process via a preferred sense. Visual: "I see what you mean." Auditory: "That sounds right." Kinesthetic: "I feel this could work." Match their system.',
+    story:'A manager kept showing charts to a TL who never engaged. Switched to walking through data verbally — instant engagement.',
+    scenario:'An employee says "Something doesn\'t feel right about this process." Which system are they in? How do you respond in it?',
+    action:'In one conversation today, notice the sensory words used. Mirror them back.',
+    tags:['communication','persuasion','self-awareness'], status:'new',
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  },
+  {
+    id:'wt01', book:'Words That Change Minds', chapter:0, cardType:'framework',
+    title:'Toward vs. Away-From Motivation',
+    insight:'Some people are energized by goals and rewards (Toward). Others by avoiding problems (Away-From). Using the wrong motivator is like pushing a pull door.',
+    story:'Two sales reps: one lights up at "hit target, earn bonus" (Toward). The other responds to "miss this, lose the client" (Away-From). Same team, opposite fuel.',
+    scenario:'Your TL never responds to positive targets but springs to action when SLAs are at risk. How would you frame next quarter\'s goal?',
+    action:'Pick one person you manage. Frame today\'s request using THEIR motivational direction.',
+    framework:'🎯 TOWARD\n→ "Here\'s what we\'ll achieve..."\n\n🛡️ AWAY-FROM\n→ "Here\'s what we\'ll avoid..."',
+    tags:['persuasion','leadership','communication'], status:'new',
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  },
+  {
+    id:'wt02', book:'Words That Change Minds', chapter:1, cardType:'concept',
+    title:'Proactive vs. Reactive Patterns',
+    insight:'Proactive people initiate and jump in. Reactive people analyze and wait. Neither is better — but mismatching role to pattern causes friction.',
+    story:'A reactive TL was labeled "slow" — but given QC analysis tasks, they outperformed everyone. Fit the role to the pattern.',
+    scenario:'Two tasks: urgent client escalation, and root-cause analysis. One Proactive TL, one Reactive. Who gets what?',
+    action:'Observe one person today — do they jump in or wait and assess? Assign their next task accordingly.',
+    tags:['leadership','decision-making'], status:'new',
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  },
+  {
+    id:'wt03', book:'Words That Change Minds', chapter:2, cardType:'concept',
+    title:'Internal vs. External Reference',
+    insight:'Internal people decide based on own standards — they "just know." External people need feedback. Too much feedback to an Internal feels controlling; none to External feels neglectful.',
+    story:'A high performer quit because her manager kept giving unsolicited feedback. She was Internal — the feedback felt patronizing.',
+    scenario:'How do you tell? Ask: "How do you know you\'ve done a good job?" Internal: "I just know." External: "My manager tells me."',
+    action:'Ask one team member today: "How do you know when you\'ve done good work?" Listen for the pattern.',
+    tags:['leadership','communication','self-awareness'], status:'new',
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  },
+  {
+    id:'wt04', book:'Words That Change Minds', chapter:3, cardType:'concept',
+    title:'Options vs. Procedures',
+    insight:'Options people want choices and alternatives — they get bored with step-by-step. Procedures people want a clear sequence — choices overwhelm them.',
+    story:'An Options manager gave her Procedures team "freedom to innovate." They froze. When she gave them a 5-step checklist, output doubled.',
+    scenario:'You\'re rolling out a new process. Half your TLs want flexibility, half want exact steps. How do you deliver both?',
+    action:'Notice today: does your audience want "here are your options" or "here\'s what to do step by step"? Adjust.',
+    tags:['leadership','communication','persuasion'], status:'new',
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  },
+  {
+    id:'wt05', book:'Words That Change Minds', chapter:4, cardType:'concept',
+    title:'Influencing With LAB Profile Language',
+    insight:'Once you identify someone\'s meta-program pattern, use their language to influence. Match Toward people with benefit words, Away-From with risk words. It\'s not manipulation — it\'s translation.',
+    story:'A manager couldn\'t get buy-in for a new tool. He was using Toward language with an Away-From team. Switched to "this prevents the errors that caused last month\'s SLA miss" — instant buy-in.',
+    scenario:'Your director is Away-From, your team is Toward. You need to pitch a process change. Draft two versions of the same pitch.',
+    action:'Before your next ask, identify the person\'s pattern. Rewrite your message in THEIR language.',
+    tags:['persuasion','communication','leadership'], status:'new',
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  },
+  {
+    id:'bridge01', book:'NLP at Work', chapter:3, cardType:'bridge',
+    title:'Meta Model ↔ Internal/External Reference',
+    insight:'NLP precision questions work differently depending on the person\'s reference pattern. Internals resist being questioned — frame it as "help me understand your thinking." Externals welcome it — they want feedback loops.',
+    story:'',
+    scenario:'You need to ask precision questions to an Internal TL who resists feedback. How do you frame the Meta Model question without triggering defensiveness?',
+    action:'Before asking a precision question, gauge: are they Internal or External? Adjust your framing.',
+    tags:['communication','leadership','persuasion'], status:'new',
+    bridgeBooks:['NLP at Work','Words That Change Minds'],
+    srs:{ interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+  }
+];
+
+// Diagnostic questions (scenario-based, not self-assessment)
+const DIAGNOSTICS = {
+  'NLP at Work': [
+    {
+      q:'Your TL says "The whole night shift team is useless." Your best response:',
+      opts:['Agree and escalate to HR','Ask "Which specific team members and in what situations?"','Give a motivational speech about teamwork'],
+      correct:1, concept:'Meta Model / Generalization', chapter:3
+    },
+    {
+      q:'You\'re meeting a new client who seems closed off — arms crossed, short answers. You:',
+      opts:['Push through with your agenda — they\'ll warm up','Match their energy — slower pace, less enthusiasm, give space','Crack a joke to lighten the mood'],
+      correct:1, concept:'Rapport / Matching', chapter:2
+    },
+    {
+      q:'A colleague says "I feel like this project is heading in the wrong direction." Which sensory system are they using?',
+      opts:['Visual','Auditory','Kinesthetic'],
+      correct:2, concept:'VAK Representational Systems', chapter:5
+    },
+    {
+      q:'Your team goal is "reduce complaints." What\'s wrong with this as an NLP outcome?',
+      opts:['Nothing — it\'s specific enough','It\'s stated negatively — should be what you WANT, not what you want less of','It needs a deadline'],
+      correct:1, concept:'Well-Formed Outcomes', chapter:4
+    },
+    {
+      q:'Two managers see the same attrition data. One says "we\'re losing people" and panics. The other says "we\'re retaining 85%" and is calm. Why?',
+      opts:['One is smarter than the other','They have different mental maps of what the data means','The data is ambiguous'],
+      correct:1, concept:'Map is Not the Territory', chapter:0
+    },
+    {
+      q:'A team member keeps saying "everyone knows the process is broken." This is an example of:',
+      opts:['A valid observation backed by evidence','Distortion — they\'re reading intent that may not exist','Generalization — converting limited experience into a universal rule'],
+      correct:2, concept:'Deletion, Distortion, Generalization', chapter:1
+    }
+  ],
+  'Words That Change Minds': [
+    {
+      q:'Your top TL only takes action when there\'s a risk of missing targets, not when there\'s a bonus for hitting them. They are:',
+      opts:['Toward motivated','Away-From motivated','Unmotivated'],
+      correct:1, concept:'Toward vs Away-From', chapter:0
+    },
+    {
+      q:'You ask a team member "How do you know you\'ve done a good job?" They say "I just know inside." They are:',
+      opts:['Externally referenced','Internally referenced','Being evasive'],
+      correct:1, concept:'Internal vs External Reference', chapter:2
+    },
+    {
+      q:'You give your team "freedom to choose their own approach." Half the team thrives, half freezes. The ones who froze are likely:',
+      opts:['Lazy','Procedures-oriented — they need clear steps','Overwhelmed by workload'],
+      correct:1, concept:'Options vs Procedures', chapter:3
+    },
+    {
+      q:'You\'re pitching a new system to your director who always focuses on "what could go wrong." Best pitch:',
+      opts:['"This system will increase efficiency by 30%"','"This system prevents the outages that caused last month\'s SLA miss"','"Everyone else in the industry is using this"'],
+      correct:1, concept:'Influencing with LAB Profile', chapter:4
+    },
+    {
+      q:'A team member jumps into every new task immediately without analyzing. Another waits and studies it first. How do you assign an urgent escalation?',
+      opts:['Give it to the analyzer — they\'ll be more careful','Give it to the jumper — they\'ll act fast on urgency','Doesn\'t matter, both can handle it equally'],
+      correct:1, concept:'Proactive vs Reactive', chapter:1
+    }
+  ]
+};
+
+// ═══ STATE ═══
+let state = {
+  cards: [],
+  books: {},
+  currentBook: null,
+  currentChapter: 0,
+  diagStep: 0,
+  diagAnswers: [],
+  libFilter: 'all',
+  usageLog: {}
+};
+
+function loadState() {
+  const s = localStorage.getItem('bookbites_v2');
+  if (s) {
+    state = JSON.parse(s);
+  } else {
+    state.cards = JSON.parse(JSON.stringify(PRELOADED));
+    state.books = {
+      'NLP at Work': { purpose:'To handle TL conversations and team communication better', diagDone:false, chaptersUnlocked:1 },
+      'Words That Change Minds': { purpose:'To understand what motivates each team member', diagDone:false, chaptersUnlocked:1 }
+    };
+    state.currentBook = 'NLP at Work';
+    saveState();
+  }
+}
+
+function saveState() {
+  localStorage.setItem('bookbites_v2', JSON.stringify(state));
+}
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+function switchScreen(id, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  if (id === 'screenToday') renderToday();
+  if (id === 'screenLearn') renderLearn();
+  if (id === 'screenLibrary') renderLibrary();
+}
+
+// ═══════════════════════════════════════
+// TODAY SCREEN
+// ═══════════════════════════════════════
+function renderToday() {
+  const el = document.getElementById('todayContent');
+  const now = new Date();
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 17 ? 'Good afternoon' : 'Good evening';
+
+  // Pick today's card: prefer review-due, then new
+  const due = state.cards.filter(c => c.srs.next <= Date.now() && c.status !== 'mastered');
+  const fresh = state.cards.filter(c => c.status === 'new');
+  const todayCard = due[0] || fresh[0] || state.cards[0];
+
+  // Yesterday's card (last rated)
+  const rated = state.cards.filter(c => c.srs.reps > 0).sort((a,b) => (b.srs.next - b.srs.interval*86400000) - (a.srs.next - a.srs.interval*86400000));
+  const yesterdayCard = rated[0] && rated[0].id !== todayCard.id ? rated[0] : null;
+
+  // Mastery stats
+  const total = state.cards.length;
+  const mastered = state.cards.filter(c => c.status === 'mastered').length;
+  const pct = total > 0 ? Math.round((mastered/total)*100) : 0;
+  const circumference = 2 * Math.PI * 27;
+  const offset = circumference - (pct/100) * circumference;
+
+  const theme = BOOK_THEMES[todayCard.book] || { c1:'#C2553A', c2:'#E8845A' };
+  const tpl = pickTemplate(todayCard.cardType);
+
+  el.innerHTML = `
+    <div class="today-header">
+      <div class="today-greeting">${greeting}, Sam</div>
+      <div class="today-date">${dayNames[now.getDay()]}, ${monthNames[now.getMonth()]} ${now.getDate()}</div>
+    </div>
+
+    <div class="today-pulse">
+      <div class="pulse-ring">
+        <svg viewBox="0 0 60 60">
+          <circle class="track" cx="30" cy="30" r="27"/>
+          <circle class="fill" cx="30" cy="30" r="27"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="pulse-pct">${pct}%</div>
+      </div>
+      <div class="pulse-info">
+        <h3>${mastered} of ${total} concepts mastered</h3>
+        <p>${due.length} due for review · ${fresh.length} new to explore</p>
+      </div>
+    </div>
+
+    <div class="today-card-wrapper">
+      <div class="today-concept-card">
+        <div class="today-card-visual ${tpl}" style="--c1:${theme.c1};--c2:${theme.c2}">
+          <div class="mv-bg"></div>
+          <div class="mv-text">${todayCard.title}</div>
+        </div>
+        <div class="today-card-body">
+          <div class="book-label" style="color:${theme.c1}">
+            <span class="dot" style="background:${theme.c1}"></span>
+            ${todayCard.book} · Ch ${todayCard.chapter + 1}
+          </div>
+          <p class="insight-text">${todayCard.insight}</p>
+          <div class="action-box" style="background:${theme.light || '#f5f0eb'}; color:${theme.c1}">
+            <strong>⚡ Try this today</strong>
+            ${todayCard.action}
+          </div>
+        </div>
+        <div class="today-card-actions">
+          <button class="btn-got" onclick="rateCard('${todayCard.id}','mastered')">✅ Got it</button>
+          <button class="btn-shaky" onclick="rateCard('${todayCard.id}','review')">🔄 Shaky</button>
+          <button class="btn-new" onclick="rateCard('${todayCard.id}','new')">🆕 Revisit</button>
+        </div>
+      </div>
+    </div>
+
+    ${yesterdayCard ? `
+    <div class="today-yesterday">
+      <h4>Yesterday's Concept</h4>
+      <p><strong>${yesterdayCard.title}</strong> — ${yesterdayCard.action}</p>
+      <div class="used-btns">
+        <button onclick="logUsage('${yesterdayCard.id}',true)">✅ I used this</button>
+        <button onclick="logUsage('${yesterdayCard.id}',false)">⏭️ Didn't get to it</button>
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function logUsage(id, used) {
+  if (!state.usageLog[id]) state.usageLog[id] = [];
+  state.usageLog[id].push({ date: Date.now(), used });
+  if (used) {
+    const c = state.cards.find(x => x.id === id);
+    if (c) { c.srs.reps++; c.srs.ease = Math.min(3.0, c.srs.ease + 0.1); }
+  }
+  saveState();
+  renderToday();
+}
+
+// ═══════════════════════════════════════
+// LEARN SCREEN
+// ═══════════════════════════════════════
+function renderLearn() {
+  renderBookSelector();
+  if (!state.currentBook) return;
+  const book = state.books[state.currentBook];
+  if (!book) return;
+  if (!book.diagDone) {
+    renderDiagnostic();
+  } else {
+    renderChapterView();
+  }
+}
+
+function renderBookSelector() {
+  const el = document.getElementById('bookSelector');
+  const books = Object.keys(state.books);
+  el.innerHTML = books.map(b => {
+    const theme = BOOK_THEMES[b] || { c1:'#999' };
+    return `<button class="book-pill ${state.currentBook===b?'active':''}" onclick="selectBook('${b}')">
+      <span class="pill-dot" style="background:${theme.c1}"></span>${b}
+    </button>`;
+  }).join('') + `<button class="book-pill add-pill" onclick="openAddBook()">+ Add Book</button>`;
+}
+
+function selectBook(name) {
+  state.currentBook = name;
+  state.diagStep = 0;
+  state.diagAnswers = [];
+  saveState();
+  renderLearn();
+}
+
+// ═══ DIAGNOSTIC ═══
+function renderDiagnostic() {
+  const el = document.getElementById('learnArea');
+  const diag = DIAGNOSTICS[state.currentBook];
+  if (!diag || diag.length === 0) {
+    state.books[state.currentBook].diagDone = true;
+    state.books[state.currentBook].chaptersUnlocked = 1;
+    saveState();
+    renderChapterView();
+    return;
+  }
+  const step = state.diagStep;
+  if (step >= diag.length) {
+    finishDiagnostic();
+    return;
+  }
+  const q = diag[step];
+  el.innerHTML = `
+    <div class="diagnostic-container">
+      <div class="diag-progress">
+        ${diag.map((_,i) => `<div class="dp ${i<step?'done':i===step?'current':''}"></div>`).join('')}
+      </div>
+      <div class="diag-title">Quick Assessment</div>
+      <div class="diag-subtitle">Let's see where you stand with ${state.currentBook}</div>
+      <div class="diag-question">
+        <div class="diag-q-num">Question ${step+1} of ${diag.length}</div>
+        <div class="diag-q-text">${q.q}</div>
+        <div class="diag-options">
+          ${q.opts.map((o,i) => `<button class="diag-opt ${state.diagAnswers[step]===i?'selected':''}" onclick="selectDiagOpt(${step},${i})">${o}</button>`).join('')}
+        </div>
+      </div>
+      <div class="diag-nav">
+        ${step > 0 ? `<button class="btn-skip" onclick="diagPrev()">← Back</button>` : ''}
+        <button class="btn-next" onclick="diagNext()" ${state.diagAnswers[step]===undefined?'style="opacity:0.5"':''}>Next →</button>
+      </div>
+    </div>
+  `;
+}
+
+function selectDiagOpt(step, opt) {
+  state.diagAnswers[step] = opt;
+  renderDiagnostic();
+}
+
+function diagNext() {
+  if (state.diagAnswers[state.diagStep] === undefined) return;
+  state.diagStep++;
+  renderDiagnostic();
+}
+
+function diagPrev() {
+  if (state.diagStep > 0) { state.diagStep--; renderDiagnostic(); }
+}
+
+function finishDiagnostic() {
+  const diag = DIAGNOSTICS[state.currentBook];
+  let correct = 0;
+  const chapterScores = {};
+  diag.forEach((q, i) => {
+    const isCorrect = state.diagAnswers[i] === q.correct;
+    if (isCorrect) correct++;
+    if (!chapterScores[q.chapter]) chapterScores[q.chapter] = { total:0, correct:0 };
+    chapterScores[q.chapter].total++;
+    if (isCorrect) chapterScores[q.chapter].correct++;
+  });
+
+  // Unlock chapters where user scored well
+  let unlock = 1;
+  const theme = BOOK_THEMES[state.currentBook];
+  if (theme) {
+    for (let ch = 0; ch < theme.chapters.length; ch++) {
+      if (chapterScores[ch] && chapterScores[ch].correct === chapterScores[ch].total) {
+        unlock = ch + 2; // unlock NEXT chapter
+        // Fast-track mastered concepts
+        state.cards.filter(c => c.book === state.currentBook && c.chapter === ch).forEach(c => {
+          c.status = 'review'; c.srs.reps = 1; c.srs.interval = 3;
+          c.srs.next = Date.now() + 3*86400000;
+        });
+      }
+    }
+  }
+
+  state.books[state.currentBook].diagDone = true;
+  state.books[state.currentBook].chaptersUnlocked = Math.min(unlock, theme ? theme.chapters.length : 6);
+  state.currentChapter = 0;
+  // Find first chapter that needs work
+  for (let ch = 0; ch < (theme ? theme.chapters.length : 6); ch++) {
+    if (!chapterScores[ch] || chapterScores[ch].correct < chapterScores[ch].total) {
+      state.currentChapter = ch; break;
+    }
+  }
+  saveState();
+
+  // Show results briefly
+  const el = document.getElementById('learnArea');
+  const pct = Math.round((correct/diag.length)*100);
+  el.innerHTML = `
+    <div class="assess-results">
+      <h2>Assessment Complete</h2>
+      <div style="text-align:center;padding:30px 0;">
+        <div style="font-size:48px;font-family:var(--font-display);">${pct}%</div>
+        <p style="color:var(--ink40);margin-top:4px;">${correct} of ${diag.length} correct</p>
+        <p style="color:var(--ink70);margin-top:12px;font-size:14px;line-height:1.6;">
+          ${pct >= 80 ? 'Strong foundation! We\'ve fast-tracked concepts you already know. Your learning starts at the gaps.' :
+            pct >= 50 ? 'Good awareness — some gaps to fill. We\'ll focus your learning on the concepts you missed.' :
+            'Great starting point — lots to discover! We\'ll guide you through each chapter step by step.'}
+        </p>
+      </div>
+      <button class="assess-btn" onclick="renderChapterView()">Start Learning →</button>
+    </div>
+  `;
+}
+
+// ═══ CHAPTER VIEW ═══
+function renderChapterView() {
+  const el = document.getElementById('learnArea');
+  const book = state.books[state.currentBook];
+  const theme = BOOK_THEMES[state.currentBook] || { chapters:['Ch 1','Ch 2','Ch 3','Ch 4','Ch 5','Ch 6'], c1:'#999', c2:'#bbb' };
+  const chapters = theme.chapters;
+  const ch = state.currentChapter;
+
+  const chapterCards = state.cards.filter(c => c.book === state.currentBook && c.chapter === ch);
+  const mastered = chapterCards.filter(c => c.status === 'mastered').length;
+  const pct = chapterCards.length > 0 ? Math.round((mastered/chapterCards.length)*100) : 0;
+
+  // Check unlock for viewing
+  const canView = ch < book.chaptersUnlocked;
+
+  el.innerHTML = `
+    <div class="chapter-track">
+      <div class="chapter-bar">
+        ${chapters.map((_, i) => {
+          const cCards = state.cards.filter(c => c.book === state.currentBook && c.chapter === i);
+          const cMastered = cCards.filter(c => c.status === 'mastered').length;
+          const cPct = cCards.length > 0 ? cMastered/cCards.length : 0;
+          let cls = i < book.chaptersUnlocked ? (cPct >= 0.6 ? 'mastered' : i === ch ? 'current' : 'unlocked') : '';
+          return `<div class="chapter-seg ${cls}" onclick="${i < book.chaptersUnlocked ? `jumpChapter(${i})` : ''}" title="${chapters[i]}"></div>`;
+        }).join('')}
+      </div>
+      <div class="chapter-label">Chapter ${ch+1}: ${chapters[ch]} · ${pct}% mastered${!canView ? ' 🔒' : ''}</div>
+    </div>
+
+    ${book.purpose ? `<div class="chapter-purpose"><span>🎯</span> <div><strong>Your purpose:</strong> ${book.purpose}</div></div>` : ''}
+
+    <div class="learn-cards">
+      ${canView ? chapterCards.map((c, i) => renderLearnCard(c, i, theme)).join('') :
+        `<div style="padding:40px 24px;text-align:center;color:var(--ink40);">
+          <div style="font-size:36px;margin-bottom:12px;">🔒</div>
+          <p>Master 60% of Chapter ${ch} to unlock this chapter</p>
+        </div>`}
+    </div>
+
+    ${canView && pct >= 60 && ch < chapters.length - 1 ? `
+    <div style="padding:0 24px;">
+      <button class="assess-btn" onclick="jumpChapter(${ch+1})" style="background:var(--sage);">
+        Continue to Chapter ${ch+2}: ${chapters[ch+1]} →
+      </button>
+    </div>` : ''}
+
+    <div style="padding:16px 24px 0;">
+      <button class="assess-btn" onclick="startAssessment()" style="background:var(--navy);">
+        🧪 Test My Mastery
+      </button>
+    </div>
+  `;
+
+  // Auto-unlock next chapter
+  if (pct >= 60 && ch + 1 < chapters.length && book.chaptersUnlocked <= ch + 1) {
+    book.chaptersUnlocked = ch + 2;
+    saveState();
+  }
+}
+
+function jumpChapter(ch) {
+  state.currentChapter = ch;
+  saveState();
+  renderChapterView();
+  document.getElementById('screenLearn').scrollTo(0,0);
+}
+
+function renderLearnCard(c, idx, theme) {
+  const badge = TYPE_BADGES[c.cardType] || TYPE_BADGES.concept;
+  const tpl = pickTemplate(c.cardType);
+  const statusEmoji = c.status === 'mastered' ? '✅' : c.status === 'review' ? '🔄' : '🆕';
+
+  return `
+    <div class="learn-card" style="animation-delay:${idx*0.08}s">
+      <div class="learn-card-visual ${tpl}" style="--c1:${theme.c1};--c2:${theme.c2}">
+        <div class="v-bg"></div>
+        <div class="v-content">
+          <h3>${c.title}</h3>
+          <div class="v-sub">${c.cardType.toUpperCase()} ${statusEmoji}</div>
+        </div>
+      </div>
+      <div class="learn-card-body">
+        <span class="lc-type" style="background:${badge.bg};color:${badge.color}">${badge.label}</span>
+        <p class="lc-insight">${c.insight}</p>
+
+        ${c.story ? `<div class="lc-story"><strong>📖 Story Anchor</strong>${c.story}</div>` : ''}
+        ${c.framework ? `<div class="lc-story" style="border-color:var(--sage);font-family:var(--font-mono);font-size:12px;white-space:pre-line;"><strong>📐 Framework</strong>${c.framework}</div>` : ''}
+
+        <div class="lc-scenario">
+          <strong>🎯 Situation Challenge</strong>
+          <p>${c.scenario}</p>
+        </div>
+
+        <div class="lc-action" style="background:${theme.light || '#f5f0eb'};color:${theme.c1}">
+          <strong>⚡ Your Action</strong>
+          <p>${c.action}</p>
+        </div>
+      </div>
+      <div class="learn-card-rating">
+        <button class="r-got" onclick="rateCard('${c.id}','mastered')">✅ Got it</button>
+        <button class="r-shaky" onclick="rateCard('${c.id}','review')">🔄 Shaky</button>
+        <button class="r-revisit" onclick="rateCard('${c.id}','new')">🆕 Revisit</button>
+      </div>
+    </div>
+  `;
+}
+
+// ═══ MASTERY ASSESSMENT ═══
+function startAssessment() {
+  const bookCards = state.cards.filter(c => c.book === state.currentBook && c.status !== 'new');
+  if (bookCards.length < 3) {
+    alert('Learn at least 3 concepts before taking the assessment!');
+    return;
+  }
+
+  const el = document.getElementById('learnArea');
+  const theme = BOOK_THEMES[state.currentBook] || { c1:'#999', chapters:[] };
+  const tagScores = {};
+  state.cards.filter(c => c.book === state.currentBook).forEach(c => {
+    (c.tags||[]).forEach(t => {
+      if (!tagScores[t]) tagScores[t] = { total:0, mastered:0 };
+      tagScores[t].total++;
+      if (c.status === 'mastered') tagScores[t].mastered++;
+    });
+  });
+
+  const total = state.cards.filter(c => c.book === state.currentBook).length;
+  const mastered = state.cards.filter(c => c.book === state.currentBook && c.status === 'mastered').length;
+  const overallPct = total > 0 ? Math.round((mastered/total)*100) : 0;
+
+  el.innerHTML = `
+    <div class="assess-results">
+      <h2>Mastery Report</h2>
+      <p style="color:var(--ink40);margin-bottom:20px;">${state.currentBook}</p>
+
+      <div style="text-align:center;padding:20px 0;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-sm);margin-bottom:20px;">
+        <div style="font-size:56px;font-family:var(--font-display);color:${theme.c1};">${overallPct}%</div>
+        <p style="color:var(--ink40);font-size:13px;">${mastered} of ${total} concepts mastered</p>
+      </div>
+
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;">Strength Map</h3>
+      <div class="assess-gaps">
+        ${Object.entries(tagScores).map(([tag, s]) => {
+          const p = Math.round((s.mastered/s.total)*100);
+          const color = p >= 70 ? 'var(--sage)' : p >= 40 ? 'var(--amber)' : 'var(--terracotta)';
+          return `<div class="gap-item">
+            <div class="gap-label">${tag}</div>
+            <div class="gap-bar-bg"><div class="gap-bar-fill" style="width:${p}%;background:${color};"></div></div>
+            <div class="gap-pct" style="color:${color}">${p}%</div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:8px;">Next Steps</h3>
+      <div style="background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm);margin-bottom:16px;">
+        ${Object.entries(tagScores).filter(([_,s]) => (s.mastered/s.total) < 0.5).map(([tag]) =>
+          `<p style="font-size:13px;color:var(--ink70);line-height:1.6;margin-bottom:6px;">→ Focus on <strong>${tag}</strong> — revisit cards tagged with this theme</p>`
+        ).join('') || '<p style="font-size:13px;color:var(--sage);">Excellent progress across all areas!</p>'}
+      </div>
+
+      <button class="assess-btn" onclick="renderChapterView()">← Back to Learning</button>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════
+// LIBRARY SCREEN
+// ═══════════════════════════════════════
+function renderLibrary() {
+  renderLibFilters();
+  renderMasonry();
+}
+
+function renderLibFilters() {
+  const tags = new Set();
+  tags.add('all');
+  state.cards.forEach(c => (c.tags||[]).forEach(t => tags.add(t)));
+  const el = document.getElementById('libFilters');
+  el.innerHTML = [...tags].map(t =>
+    `<button class="lib-chip ${state.libFilter===t?'active':''}" onclick="setLibFilter('${t}')">${t === 'all' ? 'All' : t}</button>`
+  ).join('');
+}
+
+function setLibFilter(f) {
+  state.libFilter = f;
+  renderLibrary();
+}
+
+function renderMasonry() {
+  const el = document.getElementById('masonry');
+  let cards = state.libFilter === 'all' ? state.cards : state.cards.filter(c => c.tags && c.tags.includes(state.libFilter));
+
+  el.innerHTML = cards.map((c, i) => {
+    const theme = BOOK_THEMES[c.book] || { c1:'#999', c2:'#bbb' };
+    const badge = TYPE_BADGES[c.cardType] || TYPE_BADGES.concept;
+    const tpl = pickTemplate(c.cardType);
+    const statusEmoji = c.status === 'mastered' ? '✅' : c.status === 'review' ? '🔄' : '🆕';
+    const usageCount = (state.usageLog[c.id] || []).filter(u => u.used).length;
+
+    return `
+      <div class="m-card" style="animation-delay:${i*0.04}s" onclick="openModal('${c.id}')">
+        <div class="m-card-visual ${tpl}" style="--c1:${theme.c1};--c2:${theme.c2};min-height:${c.cardType==='framework'?'120px':c.cardType==='quote'?'100px':'90px'}">
+          <div class="mv-bg"></div>
+          <span class="m-card-status">${statusEmoji}</span>
+          <div class="mv-text">${c.cardType === 'quote' ? '"'+c.title+'"' : c.title}${c.framework ? '<br><span style="font-family:var(--font-mono);font-size:10px;opacity:0.8;margin-top:6px;display:block;">'+c.framework.split('\n').slice(0,3).join(' · ')+'</span>' : ''}</div>
+        </div>
+        <div class="m-card-body">
+          <span class="mc-type" style="background:${badge.bg};color:${badge.color}">${badge.label}</span>
+          <div class="mc-title">${c.title}</div>
+          <div class="mc-book"><span class="dot" style="background:${theme.c1}"></span>${c.book}</div>
+          <div class="mc-tags">${(c.tags||[]).map(t => `<span class="mc-tag">${t}</span>`).join('')}</div>
+        </div>
+        ${usageCount > 0 ? `<div class="m-card-used" onclick="event.stopPropagation();">✅ Used ${usageCount} time${usageCount>1?'s':''}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// CARD MODAL
+// ═══════════════════════════════════════
+function openModal(id) {
+  const c = state.cards.find(x => x.id === id);
+  if (!c) return;
+  const theme = BOOK_THEMES[c.book] || { c1:'#999', c2:'#bbb', light:'#f0f0f0' };
+  const bridges = state.cards.filter(x => x.id !== c.id && x.tags && c.tags && x.tags.some(t => c.tags.includes(t))).slice(0,3);
+
+  document.getElementById('modalPanel').innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <div class="modal-head-info">
+        <div class="mh-book" style="color:${theme.c1}">${c.book} · Ch ${c.chapter+1}</div>
+        <h2>${c.title}</h2>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="modal-section">
+      <div class="ms-label">💡 The Insight</div>
+      <div class="ms-text">${c.insight}</div>
+    </div>
+
+    ${c.story ? `<div class="modal-section">
+      <div class="ms-label">📖 Story Anchor</div>
+      <div class="ms-text">${c.story}</div>
+    </div>` : ''}
+
+    ${c.framework ? `<div class="modal-section">
+      <div class="ms-label">📐 Framework</div>
+      <div style="background:var(--ivory);border-radius:var(--radius-sm);padding:12px;font-family:var(--font-mono);font-size:12px;line-height:1.8;white-space:pre-line;color:var(--ink70);">${c.framework}</div>
+    </div>` : ''}
+
+    <div class="modal-section">
+      <div class="ms-label">🎯 Situation Challenge</div>
+      <div class="ms-text">${c.scenario}</div>
+    </div>
+
+    <div class="modal-section">
+      <div class="ms-label">⚡ Your Action</div>
+      <div class="ms-action" style="background:${theme.light};color:${theme.c1}">
+        <strong>Try This →</strong>
+        ${c.action}
+      </div>
+    </div>
+
+    ${bridges.length > 0 ? `<div class="modal-section">
+      <div class="ms-label">🔗 Related Concepts</div>
+      <div class="ms-bridges">
+        ${bridges.map(b => `<span class="ms-bridge-link" onclick="closeModal();setTimeout(()=>openModal('${b.id}'),300)">↗ ${b.title}</span>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <div class="modal-section" style="border:none;padding-top:8px;">
+      <div class="ms-label">How well do you know this?</div>
+    </div>
+    <div class="modal-rating">
+      <button class="mr-got" onclick="rateCard('${c.id}','mastered')">✅ Got it</button>
+      <button class="mr-shaky" onclick="rateCard('${c.id}','review')">🔄 Shaky</button>
+      <button class="mr-revisit" onclick="rateCard('${c.id}','new')">🆕 Revisit</button>
+    </div>
+  `;
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ═══════════════════════════════════════
+// SRS RATING
+// ═══════════════════════════════════════
+function rateCard(id, rating) {
+  const c = state.cards.find(x => x.id === id);
+  if (!c) return;
+
+  if (rating === 'mastered') {
+    c.srs.reps++;
+    c.srs.ease = Math.min(3.0, c.srs.ease + 0.1);
+    c.srs.interval = c.srs.interval === 0 ? 1 : Math.round(c.srs.interval * c.srs.ease);
+    c.status = c.srs.reps >= 3 ? 'mastered' : 'review';
+    // Layer progression
+    if (c.srs.reps >= 2 && c.srs.layer === 1) c.srs.layer = 2;
+  } else if (rating === 'review') {
+    c.srs.ease = Math.max(1.3, c.srs.ease - 0.15);
+    c.srs.interval = Math.max(1, Math.round(c.srs.interval * 0.6));
+    c.status = 'review';
+  } else {
+    c.srs.reps = 0; c.srs.interval = 0; c.srs.ease = 2.5;
+    c.status = 'new'; c.srs.layer = 1;
+  }
+  c.srs.next = Date.now() + c.srs.interval * 86400000;
+
+  saveState();
+  closeModal();
+
+  // Refresh current screen
+  const active = document.querySelector('.screen.active');
+  if (active.id === 'screenToday') renderToday();
+  else if (active.id === 'screenLearn') renderChapterView();
+  else renderLibrary();
+}
+
+// ═══════════════════════════════════════
+// ADD BOOK (Claude-in-Claude)
+// ═══════════════════════════════════════
+function openAddBook() {
+  document.getElementById('addOverlay').classList.add('open');
+}
+function closeAddBook() {
+  document.getElementById('addOverlay').classList.remove('open');
+  document.getElementById('addBookTitle').value = '';
+  document.getElementById('addBookWhy').value = '';
+  document.getElementById('addLoading').classList.remove('active');
+}
+document.getElementById('addOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeAddBook();
+});
+
+async function generateBook() {
+  const title = document.getElementById('addBookTitle').value.trim();
+  const why = document.getElementById('addBookWhy').value.trim();
+  if (!title) return;
+
+  const loading = document.getElementById('addLoading');
+  const loadMsg = document.getElementById('loadingMsg');
+  loading.classList.add('active');
+
+  const messages = [
+    'Claude is reading the book...',
+    'Extracting key concepts...',
+    'Building situation challenges...',
+    'Generating visual cards...'
+  ];
+  let msgIdx = 0;
+  const msgTimer = setInterval(() => {
+    msgIdx = (msgIdx+1) % messages.length;
+    loadMsg.textContent = messages[msgIdx];
+  }, 3000);
+
+  try {
+    const systemPrompt = `You generate learning cards from books. The user is Sam, an operations manager at a document management company serving hospitals. He manages Team Leads across shifts of 100-200 employees. He wants to apply book knowledge to his daily work.
+
+Output ONLY a JSON object, no markdown, no backticks. Structure:
+{
+  "bookColor1": "#hex dark",
+  "bookColor2": "#hex lighter",
+  "bookColorLight": "#hex very light bg",
+  "icon": "emoji",
+  "chapters": ["Ch Name 1","Ch Name 2",...max 6],
+  "diagnostics": [
+    {"q":"scenario question","opts":["A","B","C"],"correct":0,"concept":"name","chapter":0},
+    ... 5-6 questions
+  ],
+  "cards": [
+    {
+      "chapter":0,"cardType":"concept|quote|framework|bridge|challenge",
+      "title":"concept name","insight":"2-3 sentences",
+      "story":"3-4 sentence story anchor or empty string",
+      "scenario":"situation challenge for Sam's ops context",
+      "action":"specific micro-action for today",
+      "framework":"formatted text for framework cards or empty string",
+      "tags":["tag1","tag2"]
+    },
+    ... 12-18 cards spread across chapters
+  ]
+}
+
+Diagnostic questions must be SCENARIO-BASED (not self-assessment). Test behavior, not belief.
+Cards should have situation challenges set in Sam's work context where possible.
+${why ? 'Sam\'s purpose for this book: ' + why : ''}`;
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:4000,
+        system: systemPrompt,
+        messages:[{ role:'user', content:`Generate learning cards for the book: "${title}"` }]
+      })
+    });
+
+    const data = await resp.json();
+    clearInterval(msgTimer);
+
+    const text = data.content.map(b => b.text || '').join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+
+    // Register book
+    const bookKey = title;
+    BOOK_THEMES[bookKey] = {
+      c1: parsed.bookColor1 || '#666',
+      c2: parsed.bookColor2 || '#999',
+      light: parsed.bookColorLight || '#f0f0f0',
+      icon: parsed.icon || '📘',
+      chapters: parsed.chapters || ['Chapter 1']
+    };
+
+    state.books[bookKey] = {
+      purpose: why || '',
+      diagDone: false,
+      chaptersUnlocked: 1
+    };
+
+    // Store diagnostics
+    if (parsed.diagnostics) {
+      DIAGNOSTICS[bookKey] = parsed.diagnostics;
+    }
+
+    // Add cards
+    parsed.cards.forEach((card, i) => {
+      state.cards.push({
+        id: bookKey.replace(/\s/g,'').toLowerCase().slice(0,6) + '_' + Date.now() + '_' + i,
+        book: bookKey,
+        chapter: card.chapter || 0,
+        cardType: card.cardType || 'concept',
+        title: card.title,
+        insight: card.insight,
+        story: card.story || '',
+        scenario: card.scenario || '',
+        action: card.action || '',
+        framework: card.framework || '',
+        tags: card.tags || [],
+        status: 'new',
+        srs: { interval:0, ease:2.5, next:Date.now(), reps:0, layer:1 }
+      });
+    });
+
+    state.currentBook = bookKey;
+    state.diagStep = 0;
+    state.diagAnswers = [];
+    saveState();
+
+    closeAddBook();
+    switchScreen('screenLearn', document.querySelector('[data-screen="screenLearn"]'));
+
+  } catch(err) {
+    clearInterval(msgTimer);
+    console.error('Generation error:', err);
+    loadMsg.textContent = 'Error generating cards. Check console.';
+
+    // Fallback: add book with empty cards
+    state.books[title] = { purpose: why || '', diagDone: true, chaptersUnlocked: 1 };
+    BOOK_THEMES[title] = { c1:'#666', c2:'#999', light:'#f0f0f0', icon:'📘', chapters:['Chapter 1'] };
+    saveState();
+    setTimeout(() => {
+      closeAddBook();
+      alert('Could not generate AI cards — book added with empty structure. You can add cards manually or try again.');
+    }, 2000);
+  }
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+window.resetBookBites = function() {
+  localStorage.removeItem('bookbites_v2');
+  location.reload();
+};
+
+loadState();
+renderToday();
+</script>
+</body>
+</html>
