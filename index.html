@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F7F6F3">
+<title>BookBites</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F6F3;--bg2:#EFEEE9;--bg3:#E8E6DF;--card:#FFFFFF;--text:#2D2A26;--text2:#6B6560;--text3:#9E9890;--border:rgba(45,42,38,0.08);--shadow-sm:0 1px 4px rgba(45,42,38,0.06);--shadow-md:0 4px 20px rgba(45,42,38,0.09);--shadow-lg:0 8px 40px rgba(45,42,38,0.14);--radius:14px;--radius-sm:10px;--font-display:'Playfair Display',Georgia,serif;--font-body:'Source Sans 3',-apple-system,sans-serif;--font-mono:'IBM Plex Mono',monospace;--nav-h:64px}
+*{margin:0;padding:0;box-sizing:border-box}
+html{height:100%;overflow:hidden}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);height:100%;overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+
+/* NAV */
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:500;background:rgba(255,255,255,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;height:var(--nav-h);padding-bottom:env(safe-area-inset-bottom,0)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;font-family:var(--font-body);font-size:10px;font-weight:600;color:var(--text3);cursor:pointer;transition:color 0.2s}
+.nav-btn svg{width:22px;height:22px;stroke-width:1.8;fill:none;stroke:currentColor}
+.nav-btn.active{color:#C84B31}
+
+/* SCREENS */
+.screen{display:none;height:calc(100% - var(--nav-h));overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* DESKTOP LAYOUT */
+@media(min-width:900px){
+  .screen.active{display:flex}
+  .main-panel{flex:0 0 480px;overflow-y:auto;padding-right:20px;border-right:1px solid var(--border)}
+  .side-panel{flex:1;overflow-y:auto;padding-left:20px}
+}
+
+/* PULSE */
+.pulse{display:flex;align-items:center;gap:14px;padding:20px 24px}
+.pulse-ring{width:56px;height:56px;position:relative;flex-shrink:0}
+.pulse-ring svg{width:56px;height:56px;transform:rotate(-90deg)}
+.pulse-ring circle{fill:none;stroke-width:4.5;stroke-linecap:round}
+.pulse-ring .bg{stroke:var(--bg2)}
+.pulse-ring .fg{stroke:#1D9E75;transition:stroke-dashoffset 1s ease}
+.pulse-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:13px;font-weight:500}
+
+/* CARDS */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;animation:fadeUp 0.4s ease both;cursor:pointer;margin:0 24px 12px}
+.card:hover{box-shadow:var(--shadow-md)}
+.card-vis{padding:24px 20px;position:relative;overflow:hidden}
+.card-vis .v-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);opacity:0.1}
+.card-vis .v-icon svg{width:64px;height:64px;stroke:#fff;stroke-width:1.2;fill:none}
+.card-vis .v-type{font-size:9px;font-weight:500;letter-spacing:1px;color:rgba(255,255,255,0.6);margin-bottom:4px;position:relative}
+.card-vis .v-title{font-family:var(--font-display);font-size:18px;line-height:1.3;color:#fff;position:relative;max-width:78%}
+.card-body{padding:16px 20px}
+.card-insight{font-size:14px;line-height:1.65;color:var(--text2);margin-bottom:14px}
+.card-section{border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:1.55}
+.card-section .cs-label{font-size:10px;font-weight:500;letter-spacing:0.5px;margin-bottom:4px;display:block}
+.card-section p{color:var(--text2);margin:0}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.card-tag{font-size:9px;padding:3px 8px;border-radius:6px;background:var(--bg2);color:var(--text3);font-weight:500}
+.card-rating{display:flex;gap:6px;padding:0 20px 16px}
+.rate-btn{flex:1;padding:11px 8px;border-radius:var(--radius-sm);border:1.5px solid;font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;background:transparent;text-align:center}
+.rate-got{border-color:#1D9E75;color:#0F6E56;background:rgba(29,158,117,0.05)}
+.rate-shaky{border-color:#BA7517;color:#854F0B;background:rgba(186,117,23,0.05)}
+.rate-new{border-color:#C84B31;color:#993C1D;background:rgba(194,85,58,0.05)}
+.rate-btn:active{transform:scale(0.96)}
+
+/* ACTION BOX */
+.action-box{background:#0F6E56;border-radius:var(--radius-sm);padding:12px 14px;color:#fff}
+.action-box .cs-label{color:rgba(255,255,255,0.7)}
+.action-box p{color:#fff !important;font-weight:500}
+
+/* FRAMEWORK TILES */
+.fw-tiles{display:flex;gap:8px;margin:10px 0}
+.fw-tile{flex:1;background:var(--bg2);border-radius:var(--radius-sm);padding:10px;text-align:center}
+.fw-tile svg{width:20px;height:20px;stroke:var(--text2);stroke-width:1.8;fill:none;display:block;margin:0 auto 4px}
+.fw-tile .fw-name{font-size:11px;font-weight:500;color:var(--text)}
+.fw-tile .fw-sub{font-size:10px;color:var(--text3)}
+
+/* BOOK PILLS */
+.pills{display:flex;gap:8px;padding:0 24px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:16px}
+.pills::-webkit-scrollbar{display:none}
+.pill{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.pill.active{color:#fff;border-color:transparent}
+.pill.add{border-style:dashed;color:var(--text3)}
+
+/* CHAPTER BAR */
+.ch-bar{display:flex;gap:3px;margin:0 24px 8px}
+.ch-seg{flex:1;height:8px;border-radius:4px;background:var(--bg3);cursor:pointer;transition:background 0.3s}
+.ch-seg.done{background:#1D9E75}
+.ch-seg.current{background:var(--text)}
+.ch-label{font-size:11px;font-weight:500;letter-spacing:0.8px;color:var(--text3);margin:0 24px 12px}
+
+/* PROGRESS */
+.prog-bar{display:flex;align-items:center;gap:12px;margin:0 24px 6px}
+.prog-track{flex:1;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width 0.6s}
+.prog-label{font-size:12px;font-weight:500;color:var(--text3)}
+
+/* LIBRARY MASONRY */
+.masonry{padding:8px 16px;column-count:2;column-gap:10px}
+@media(min-width:768px){.masonry{column-count:3}}
+@media(min-width:1100px){.masonry{column-count:3}}
+.mcard{break-inside:avoid;margin-bottom:10px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:box-shadow 0.3s,transform 0.25s;animation:fadeUp 0.4s ease both}
+.mcard:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.mcard-vis{padding:16px 14px;position:relative;overflow:hidden;min-height:80px;display:flex;flex-direction:column;justify-content:flex-end}
+.mcard-vis .mv-icon{position:absolute;right:10px;bottom:10px;opacity:0.1}
+.mcard-vis .mv-icon svg{width:44px;height:44px;stroke:#fff;stroke-width:1.2;fill:none}
+.mcard-vis .mv-status{position:absolute;right:8px;top:8px;font-size:11px}
+.mcard-vis .mv-type{font-size:8px;font-weight:500;letter-spacing:1px;color:rgba(255,255,255,0.6);margin-bottom:2px}
+.mcard-vis .mv-title{font-family:var(--font-display);font-size:14px;line-height:1.3;color:#fff}
+.mcard-body{padding:10px 14px;background:var(--card)}
+.mcard-snip{font-size:11px;line-height:1.5;color:var(--text2)}
+.mcard-book{font-size:8px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin-top:6px}
+.mcard-used{padding:5px 14px 8px;background:var(--card);border-top:1px solid var(--border);font-size:9px;color:#1D9E75;font-weight:600}
+
+/* QUOTE CARD */
+.mcard.quote .mcard-vis{min-height:100px;align-items:center;justify-content:center;padding:20px 16px}
+.mcard.quote .mv-title{font-style:italic;text-align:center;font-size:14px;line-height:1.4}
+
+/* OVERLAYS */
+.overlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(45,42,38,0.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.overlay.open{display:flex;justify-content:center;align-items:flex-end}
+@media(min-width:600px){.overlay.open{align-items:center;padding:24px}}
+.sheet{background:var(--card);width:100%;max-height:92vh;border-radius:20px 20px 0 0;overflow-y:auto;animation:sheetUp 0.35s cubic-bezier(0.16,1,0.3,1)}
+@media(min-width:600px){.sheet{max-width:500px;border-radius:20px}}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--bg3);margin:10px auto 0}
+.sheet-head{padding:16px 20px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.sheet-close{width:30px;height:30px;border-radius:50%;background:var(--bg2);border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);flex-shrink:0}
+.sheet-section{padding:14px 20px;border-top:1px solid var(--border)}
+.sheet-section:first-of-type{border:none}
+.ss-label{font-size:10px;font-weight:600;letter-spacing:1px;color:var(--text3);margin-bottom:6px}
+.ss-text{font-size:14px;line-height:1.6;color:var(--text2)}
+
+/* ADD BOOK */
+.add-screen{display:none;position:fixed;inset:0;z-index:700;background:var(--bg);overflow-y:auto;padding:48px 24px}
+.add-screen.open{display:block}
+.add-screen h1{font-family:var(--font-display);font-size:24px;margin-bottom:16px}
+.add-options{display:flex;gap:12px;margin-bottom:24px}
+.add-opt{flex:1;background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:24px 16px;text-align:center;cursor:pointer;transition:all 0.2s}
+.add-opt:hover{border-color:#C84B31}
+.add-opt.selected{border-color:#C84B31;background:rgba(200,75,49,0.03)}
+.add-opt svg{width:32px;height:32px;stroke:var(--text2);stroke-width:1.5;fill:none;margin:0 auto 10px;display:block}
+.add-opt h3{font-size:14px;font-weight:600;margin-bottom:4px}
+.add-opt p{font-size:12px;color:var(--text3);line-height:1.4}
+.add-form{margin-top:16px}
+.add-form label{display:block;font-size:11px;font-weight:600;letter-spacing:0.8px;color:var(--text3);margin-bottom:6px;margin-top:14px}
+.add-form input,.add-form textarea{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:15px;outline:none;transition:border-color 0.2s;background:var(--card)}
+.add-form input:focus,.add-form textarea:focus{border-color:#C84B31}
+.add-form textarea{min-height:60px;resize:vertical;font-size:14px}
+.add-btns{display:flex;gap:8px;margin-top:20px}
+.add-btns button{flex:1;padding:14px;border-radius:var(--radius-sm);border:none;font-family:var(--font-body);font-size:14px;font-weight:700;cursor:pointer}
+.btn-cancel{background:var(--bg2);color:var(--text2)}
+.btn-go{background:#C84B31;color:#fff}
+.file-drop{border:2px dashed var(--border);border-radius:var(--radius);padding:32px 20px;text-align:center;margin-top:12px;cursor:pointer;transition:border-color 0.2s}
+.file-drop:hover{border-color:#C84B31}
+.file-drop svg{width:40px;height:40px;stroke:var(--text3);stroke-width:1.5;fill:none;margin:0 auto 12px;display:block}
+.file-drop p{font-size:13px;color:var(--text3)}
+.file-drop .file-name{font-size:14px;font-weight:600;color:var(--text);margin-top:8px}
+
+/* LOADING */
+.loading{text-align:center;padding:40px 20px}
+.spinner{width:36px;height:36px;border:3px solid var(--bg3);border-top-color:#C84B31;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px}
+.loading p{font-size:13px;color:var(--text3)}
+
+/* DIAGNOSTIC */
+.diag{padding:24px;max-width:520px;margin:0 auto}
+.diag-progress{display:flex;gap:4px;margin-bottom:20px}
+.diag-progress .dp{flex:1;height:4px;border-radius:2px;background:var(--bg3);transition:background 0.3s}
+.diag-progress .dp.done{background:#1D9E75}
+.diag-progress .dp.current{background:var(--text)}
+.diag-q{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);margin-bottom:16px}
+.diag-q-num{font-size:10px;font-weight:600;letter-spacing:0.8px;color:var(--text3);margin-bottom:10px}
+.diag-q-text{font-size:15px;line-height:1.55;margin-bottom:16px}
+.diag-opts{display:flex;flex-direction:column;gap:8px}
+.diag-opt{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-radius:var(--radius-sm);border:1.5px solid var(--border);cursor:pointer;font-size:13px;line-height:1.45;color:var(--text2);transition:all 0.15s}
+.diag-opt:hover{border-color:var(--text);background:rgba(45,42,38,0.02)}
+.diag-opt.selected{border-color:var(--text);background:rgba(45,42,38,0.04);color:var(--text);font-weight:500}
+.diag-opt .radio{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center}
+.diag-opt.selected .radio{border-color:var(--text)}
+.diag-opt.selected .radio::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--text)}
+.diag-nav{display:flex;gap:8px;margin-top:16px}
+.diag-nav button{flex:1;padding:13px;border-radius:var(--radius-sm);border:none;font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer}
+.diag-back{background:var(--bg2);color:var(--text2)}
+.diag-next{background:var(--text);color:#fff}
+
+/* ASSESS RESULTS */
+.assess{padding:24px;max-width:520px;margin:0 auto}
+.assess h2{font-family:var(--font-display);font-size:22px;margin-bottom:16px}
+.assess-score{display:flex;gap:12px;margin-bottom:20px}
+.assess-score>div{flex:1;background:var(--bg2);border-radius:var(--radius-sm);padding:16px;text-align:center}
+.assess-score .big{font-size:28px;font-weight:500}
+.assess-score .sub{font-size:12px;color:var(--text3);margin-top:2px}
+.gap-item{display:flex;align-items:center;gap:10px;padding:6px 0}
+.gap-label{font-size:12px;font-weight:500;width:90px;flex-shrink:0}
+.gap-bar{flex:1;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden}
+.gap-fill{height:100%;border-radius:3px;transition:width 1s}
+.gap-pct{font-size:12px;font-weight:600;min-width:30px;text-align:right}
+.path-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.path-pill{padding:6px 12px;border-radius:8px;font-size:11px;font-weight:500}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:20px;background:var(--text);color:#fff;font-size:13px;font-weight:600;z-index:800;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;max-width:90%}
+.toast.show{opacity:1}
+
+/* FILTER CHIPS */
+.filters{display:flex;gap:6px;padding:8px 16px;overflow-x:auto;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.f-chip{flex-shrink:0;padding:6px 14px;border-radius:16px;border:1.5px solid var(--border);background:var(--card);font-size:11px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap;transition:all 0.2s}
+.f-chip.active{background:var(--text);color:#fff;border-color:var(--text)}
+
+.purpose{font-size:12px;color:var(--text3);font-style:italic;margin:0 24px 16px}
+</style>
+</head>
+<body>
+
+<div class="screen active" id="sToday"></div>
+<div class="screen" id="sLearn"></div>
+<div class="screen" id="sLibrary"></div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="go('sToday',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Today</button>
+  <button class="nav-btn" onclick="go('sLearn',this)"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>Learn</button>
+  <button class="nav-btn" onclick="go('sLibrary',this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Library</button>
+  <button class="nav-btn" onclick="openAdd()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add</button>
+</nav>
+
+<div class="overlay" id="detailOverlay"></div>
+<div class="add-screen" id="addScreen"></div>
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ═══ SVG ICONS (inline, no CDN) ═══
+const ICONS={
+  map:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',
+  layers:'<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>',
+  msg:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>',
+  users:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
+  check:'<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  quote:'<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 5v3c0 1 0 1 1 1z"/>',
+  lock:'<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',
+  pulse:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  thumbs:'<path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/><path d="M4 22H2V11h2"/>',
+  info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  upload:'<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  brain:'<path d="M12 2a7 7 0 017 7c0 3-2 5.5-4 7l-3 4-3-4c-2-1.5-4-4-4-7a7 7 0 017-7z"/>'
+};
+function icon(name,size=64){return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||ICONS.info}</svg>`}
+function iconColor(name,color,size=20){return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||ICONS.info}</svg>`}
+
+// ═══ PALETTES ═══
+const PAL=[
+  {main:'#C2553A',mid:'#E07A5F',light:'#F4E0DA',name:'terracotta'},
+  {main:'#2C3E6B',mid:'#5A6FA8',light:'#DFE4EF',name:'navy'},
+  {main:'#6B4C8A',mid:'#8B6DAF',light:'#EDE0ED',name:'plum'},
+  {main:'#2C6E49',mid:'#4C956C',light:'#D8F0E3',name:'forest'},
+  {main:'#5C4033',mid:'#8B6F47',light:'#EDE0D4',name:'coffee'},
+  {main:'#1D3557',mid:'#457B9D',light:'#D6E8F0',name:'steel'}
+];
+
+const TPLS=['repeating-linear-gradient(45deg,transparent,transparent 18px,rgba(255,255,255,0.08) 18px,rgba(255,255,255,0.08) 19px)',
+'radial-gradient(rgba(255,255,255,0.1) 1.5px,transparent 1.5px)',
+'repeating-linear-gradient(135deg,transparent,transparent 18px,rgba(255,255,255,0.06) 18px,rgba(255,255,255,0.06) 19px)',
+'linear-gradient(180deg,rgba(255,255,255,0.05) 0%,transparent 100%)'];
+function tpl(i){return TPLS[i%TPLS.length]}
+
+const CARD_ICONS={concept:'info',framework:'layers',quote:'quote',challenge:'target',bridge:'layers'};
+const TYPE_LABELS={concept:'💡 Concept',framework:'📐 Framework',quote:'💬 Quote',challenge:'🔥 Challenge',bridge:'🔗 Bridge'};
+
+// ═══ STATE ═══
+let state={books:[],selectedBook:0,libFilter:'all'};
+let diagState={step:0,answers:[]};
+
+function load(){const s=localStorage.getItem('bb3');if(s){state=JSON.parse(s)}else{loadPrebuilt()}}
+function save(){localStorage.setItem('bb3',JSON.stringify(state))}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+
+// ═══ PREBUILT DATA ═══
+function mc(id,ch,type,title,insight,story,scenario,action,tags,chNum,fw){
+return{id,chapter:ch,cardType:type||'concept',conceptTitle:title,insight,storyAnchor:story||'',situationChallenge:scenario,actionPrompt:action,tags:tags||[],chapterNum:chNum||1,frameworkVisual:fw||'',status:'new',srs:{interval:0,ease:2.5,next:Date.now(),reps:0},useLogs:[]}}
+
+function loadPrebuilt(){
+state.books=[
+{id:'nlp',title:'NLP at Work',purpose:'Handle TL conversations and team dynamics better',palette:0,chaptersUnlocked:2,phase:'learn',bookText:null,cards:[
+mc('n01','Ch 1: What is NLP','concept','The Map is Not the Territory','Every person operates from their own mental map — not reality itself. Conflicts arise when we assume our map is THE map.','Two managers given the same data reach opposite conclusions — neither wrong, just reading different maps.','Your TL disagrees with your process change approach. Before reacting, ask: what map are they reading?','In your next disagreement, pause and say "their map, not mine" — then ask one curious question.',['communication','self-awareness','leadership'],1),
+mc('n02','Ch 1: What is NLP','concept','Response = Your Communication\'s Meaning','You intended encouragement but they heard criticism. The response IS the meaning — not your intention.','A manager praised someone publicly — the employee was mortified. They hated spotlight.','You gave feedback intending to motivate, but they looked deflated. Who adjusts?','After any instruction today, watch the response. If not what you wanted, change YOUR communication.',['communication','self-awareness'],1),
+mc('n03','Ch 2: Filters','framework','Deletion, Distortion & Generalization','Our brain handles millions of bits but consciousness manages ~134. Three filters do the work.','Employee says "nobody ever listens." Generalization — one experience becoming universal rule.','Team member says "this always happens." Which filter? What question challenges it?','Listen for one generalization today — always, never, everyone. Ask: "Can you think of one exception?"',['communication','leadership','persuasion'],2,'🗑️ DELETION → What are they ignoring?\n🔀 DISTORTION → What meaning added?\n🔄 GENERALIZATION → Rule from too few?'),
+mc('n04','Ch 3: Rapport','concept','Matching & Mirroring for Rapport','Rapport isn\'t liking — it\'s creating unconscious sameness. Matching posture, voice pace builds trust faster than words.','Consultant matched hostile client\'s crossed arms and slow speech. Within 10 minutes — collaboration.','Resistant TL, arms crossed, flat voice. What two things would you match first?','In your next meeting, match ONE thing — speaking pace or posture — for 5 minutes.',['communication','persuasion','leadership'],3),
+mc('n05','Ch 4: Precision','concept','Meta Model: Recovering Deleted Info','When people speak vaguely — "It\'s a problem" — critical info is deleted. Precision questions recover what\'s missing.','Manager heard "process isn\'t working." Asked "which step?" Turns out one step, not the whole process.','Employee says "quality is suffering." What 3 precision questions unpack this?','When someone complains vaguely today, resist solving. Ask: "Specifically, which part?"',['communication','leadership','decision-making'],4),
+mc('n06','Ch 4: Precision','quote','The quality of your life is the quality of your questions','Vague questions get vague answers. Precise questions reveal precise truths. The Meta Model upgrades question quality.','','What question have you been avoiding with your most challenging TL?','Ask yourself one precision question about a decision you\'ve been putting off.',['communication','self-awareness'],4),
+mc('n07','Ch 5: Outcomes','framework','Well-Formed Outcomes','Outcomes must be stated positively, specific, within your control, with sensory evidence of achievement.','TL said "fewer errors." Reframed: "98% accuracy on first pass, verified by QC scores by March 30."','Your goal is "improve TL discipline." Rewrite using the 4 criteria.','Take one fuzzy goal. Rewrite: positive, specific, within control, measurable evidence.',['leadership','decision-making','self-awareness'],5,'✅ Stated POSITIVELY\n🎯 SPECIFIC enough to act\n🛠️ Within YOUR CONTROL\n👁️ Sensory EVIDENCE of success'),
+mc('n08','Ch 6: Rep Systems','concept','VAK: Visual, Auditory, Kinesthetic','People prefer different senses. Visual: "I see." Auditory: "sounds right." Kinesthetic: "I feel." Match their system.','Manager showed charts to a TL who never engaged. Switched to talking through data — instant engagement.','Employee says "doesn\'t feel right." Which system? What language mirrors them?','Notice sensory words in one conversation today. Mirror them back.',['communication','persuasion','self-awareness'],6)
+]},
+{id:'words',title:'Words That Change Minds',purpose:'Read motivation patterns and influence ethically',palette:1,chaptersUnlocked:2,phase:'learn',bookText:null,cards:[
+mc('w01','Ch 1: Motivation','framework','Toward vs. Away-From','Some energized by goals (Toward), others by avoiding problems (Away-From). Wrong motivator = pushing a pull door.','Two reps: one lights up at bonuses (Toward), other responds to "lose the client" (Away-From).','TL ignores positive targets but acts when SLAs at risk. Frame next quarter\'s goal?','Pick one person you manage. Frame today\'s request using THEIR motivational direction.',['persuasion','leadership','communication'],1,'🎯 TOWARD → "Here\'s what we\'ll achieve..."\n🛡️ AWAY-FROM → "Here\'s what we\'ll avoid..."'),
+mc('w02','Ch 2: Action','concept','Proactive vs. Reactive','Proactive: initiate, jump in. Reactive: analyze, wait. Mismatching role to pattern causes friction.','A "slow" lead given QC analysis — outperformed everyone. Reactive in Proactive role was the problem.','Urgent escalation vs root-cause analysis. One Proactive TL, one Reactive. Who gets what?','Observe one person today — jump in or wait? Assign next task accordingly.',['leadership','decision-making'],2),
+mc('w03','Ch 3: Reference','concept','Internal vs. External Reference','Internal: decide by own standards. External: need feedback. Too much feedback for Internal = controlling.','High performer quit — manager kept giving unsolicited feedback. She was Internal — felt patronizing.','Ask "How do you know you\'ve done a good job?" Internal: "I just know." External: "My manager tells me."','Ask one team member today how they know they\'ve done good work. Listen for the pattern.',['leadership','communication','self-awareness'],3),
+mc('w04','Ch 4: Scope','concept','Options vs. Procedures','Options people want choices. Procedures want clear steps. Freedom overwhelms Procedures; rigid steps bore Options.','Options manager gave Procedures team "freedom to innovate." They froze. 5-step checklist → output doubled.','Rolling out new process. Half TLs want flexibility, half want exact steps. Deliver both?','Notice today: does your audience want options or step-by-step? Adjust.',['communication','leadership','persuasion'],4),
+mc('w05','Ch 1: Motivation','quote','People don\'t resist change — they resist being changed','Resistance often isn\'t about the change — it\'s mismatch between communication and internal pattern.','','Think of last time a member resisted. Was it the WHAT or the HOW?','Before proposing change today, ask: am I framing this in their pattern or mine?',['persuasion','leadership','communication'],1),
+mc('w06','Ch 5: Influence','concept','Influencing With LAB Profile Language','Once you identify someone\'s meta-program, use their language. Match Toward with benefit words, Away-From with risk words. It\'s translation, not manipulation.','Manager couldn\'t get buy-in. Using Toward language with Away-From team. Switched to "prevents errors that caused last month\'s SLA miss" — instant buy-in.','Director is Away-From, team is Toward. Pitch process change. Draft two versions.','Before your next ask, identify pattern. Rewrite in THEIR language.',['persuasion','communication','leadership'],5)
+]}
+];save()}
+
+// ═══ HELPERS ═══
+function allCards(){return state.books.flatMap(b=>b.cards.map(c=>({...c,bookTitle:b.title,bookPal:b.palette,bookPurpose:b.purpose})))}
+function findCard(id){for(const b of state.books){const c=b.cards.find(x=>x.id===id);if(c)return{...c,bookTitle:b.title,bookPal:b.palette,bookPurpose:b.purpose}}return null}
+function sEmoji(s){return s==='mastered'?'✅':s==='review'?'🔄':'🆕'}
+function pct(b){if(!b.cards.length)return 0;return Math.round(b.cards.filter(c=>c.status==='mastered').length/b.cards.length*100)}
+function masteryByTag(){const m={};allCards().forEach(c=>(c.tags||[]).forEach(t=>{if(!m[t])m[t]={tot:0,mas:0,rev:0};m[t].tot++;if(c.status==='mastered')m[t].mas++;if(c.status==='review')m[t].rev++}));const r={};for(const[t,d]of Object.entries(m))r[t]=Math.round(((d.mas+d.rev*0.4)/d.tot)*100);return r}
+
+// ═══ NAV ═══
+function go(id,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(id==='sToday')renderToday();
+  if(id==='sLearn')renderLearn();
+  if(id==='sLibrary')renderLibrary();
+}
+
+// ═══ TODAY ═══
+function renderToday(){
+  const el=document.getElementById('sToday');
+  const a=allCards(),now=Date.now();
+  const due=a.filter(c=>c.status==='review'&&c.srs.next<=now);
+  const fresh=a.filter(c=>c.status==='new');
+  const tc=(due[0]||fresh[0]||a[0]);
+  if(!tc){el.innerHTML='<div style="padding:60px 24px;text-align:center"><h2 style="font-family:var(--font-display);font-size:24px">Welcome to BookBites</h2><p style="color:var(--text2);margin-top:8px">Add your first book to start learning</p><button onclick="openAdd()" style="margin-top:20px;padding:14px 28px;background:#C84B31;color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer">+ Add Book</button></div>';return}
+  const pal=PAL[tc.bookPal||0];
+  const mastered=a.filter(c=>c.status==='mastered').length;
+  const total=a.length;
+  const p=total?Math.round(mastered/total*100):0;
+  const circ=2*Math.PI*24,off=circ-(p/100)*circ;
+  const d=new Date(),days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const pool=[...due.slice(1),...fresh.slice(1)];
+  const yc=pool[0]||null;
+  const cIcon=CARD_ICONS[tc.cardType]||'info';
+
+  el.innerHTML=`
+  <div class="pulse">
+    <div class="pulse-ring"><svg viewBox="0 0 56 56"><circle class="bg" cx="28" cy="28" r="24"/><circle class="fg" cx="28" cy="28" r="24" stroke-dasharray="${circ}" stroke-dashoffset="${off}"/></svg><div class="pulse-pct">${p}%</div></div>
+    <div><div style="font-size:15px;font-weight:500">${mastered} of ${total} mastered</div><div style="font-size:12px;color:var(--text3)">${state.books.length} book${state.books.length!==1?'s':''} · ${due.length} due for review</div></div>
+  </div>
+
+  <div class="card" onclick="openDetail('${tc.id}')">
+    <div class="card-vis" style="background:linear-gradient(135deg,${pal.main},${pal.mid});background-image:${tpl(0)},linear-gradient(135deg,${pal.main},${pal.mid})">
+      <div class="v-icon">${icon(cIcon)}</div>
+      <div class="v-type">${tc.bookTitle.toUpperCase()} · ${tc.chapter}</div>
+      <div class="v-title">${tc.cardType==='quote'?'"'+tc.conceptTitle.replace(/"/g,'')+'"':tc.conceptTitle}</div>
+    </div>
+    <div class="card-body">
+      <p class="card-insight">${tc.insight}</p>
+      ${tc.storyAnchor?`<div class="card-section" style="background:${pal.light}"><span class="cs-label" style="color:${pal.main}">STORY ANCHOR</span><p>${tc.storyAnchor}</p></div>`:''}
+      ${tc.situationChallenge?`<div class="card-section" style="border:1px solid var(--border)"><span class="cs-label" style="color:#993C1D">SITUATION CHALLENGE</span><p>${tc.situationChallenge}</p></div>`:''}
+      <div class="action-box"><span class="cs-label">TODAY'S ACTION</span><p>${tc.actionPrompt}</p></div>
+    </div>
+    <div class="card-rating">
+      <button class="rate-btn rate-got" onclick="event.stopPropagation();rate('${tc.id}','mastered')">Got it</button>
+      <button class="rate-btn rate-shaky" onclick="event.stopPropagation();rate('${tc.id}','review')">Shaky</button>
+      <button class="rate-btn rate-new" onclick="event.stopPropagation();rate('${tc.id}','new')">Revisit</button>
+    </div>
+  </div>
+
+  ${yc?`<div style="margin:0 24px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:16px 20px">
+    <div style="font-size:10px;font-weight:600;letter-spacing:0.8px;color:var(--text3);margin-bottom:6px">YESTERDAY'S CONCEPT</div>
+    <div style="font-size:15px;font-weight:500;margin-bottom:10px">${yc.conceptTitle}</div>
+    <div style="display:flex;gap:8px"><button onclick="logUsed('${yc.id}')" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:none;font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer">✅ I used this</button><button onclick="openDetail('${yc.id}')" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:none;font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer">🔄 Review</button></div>
+  </div>`:''}
+
+  <div style="padding:16px 24px"><button onclick="openAssess()" style="width:100%;padding:14px;border:2px solid var(--border);border-radius:var(--radius-sm);background:var(--card);font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;color:var(--text2)">🧪 Test My Mastery</button></div>`;
+}
+
+// ═══ LEARN ═══
+function renderLearn(){
+  const el=document.getElementById('sLearn');
+  if(!state.books.length){el.innerHTML='<div style="padding:60px 24px;text-align:center"><h2 style="font-family:var(--font-display);font-size:24px">Add your first book</h2><button onclick="openAdd()" style="margin-top:16px;padding:14px 28px;background:#C84B31;color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer">+ Add Book</button></div>';return}
+  const b=state.books[state.selectedBook];
+  const pal=PAL[b.palette%PAL.length];
+  const p=pct(b);
+  const chs={};b.cards.forEach(c=>{if(!chs[c.chapter])chs[c.chapter]=[];chs[c.chapter].push(c)});
+  const chNames=Object.keys(chs);
+
+  let h=`<div style="padding:32px 24px 12px"><div style="font-family:var(--font-display);font-size:24px;margin-bottom:4px">Learn</div><div style="font-size:13px;color:var(--text3)">Chapter by chapter, concept by concept</div></div>
+  <div class="pills">${state.books.map((bk,i)=>`<button class="pill ${i===state.selectedBook?'active':''}" style="${i===state.selectedBook?`background:${PAL[bk.palette%PAL.length].main};border-color:${PAL[bk.palette%PAL.length].main};color:#fff`:''}" onclick="state.selectedBook=${i};save();renderLearn()">${bk.title}</button>`).join('')}<button class="pill add" onclick="openAdd()">+ Add Book</button></div>
+  <div class="prog-bar"><div class="prog-track"><div class="prog-fill" style="width:${p}%;background:${pal.main}"></div></div><div class="prog-label">${p}% · ${b.cards.filter(c=>c.status==='mastered').length}/${b.cards.length}</div></div>
+  ${b.purpose?`<div class="purpose">Purpose: ${b.purpose}</div>`:''}
+  <div class="ch-bar">${chNames.map((cn,i)=>{const cc=chs[cn];const cm=cc.filter(c=>c.status==='mastered'||c.status==='review').length;const cp=cc.length?cm/cc.length:0;const cls=i<(b.chaptersUnlocked||1)?(cp>=0.6?'done':'current'):'';return`<div class="ch-seg ${cls}" title="${cn}"></div>`}).join('')}</div>`;
+
+  chNames.forEach((cn,ci)=>{
+    const unlocked=ci<(b.chaptersUnlocked||1);
+    const cc=chs[cn],cm=cc.filter(c=>c.status==='mastered'||c.status==='review').length;
+    h+=`<div class="ch-label">${unlocked?'📖':'🔒'} ${cn.toUpperCase()} (${cm}/${cc.length})${!unlocked?' — master 60% above to unlock':''}</div>`;
+    if(unlocked){cc.forEach((c,i)=>{
+      const cpal=PAL[b.palette%PAL.length];
+      const cIcon=CARD_ICONS[c.cardType]||'info';
+      const isQ=c.cardType==='quote';
+      h+=`<div class="card" onclick="openDetail('${c.id}')" style="animation-delay:${i*0.06}s">
+        <div class="card-vis" style="background:linear-gradient(135deg,${cpal.main},${cpal.mid});background-image:${tpl(i)},linear-gradient(135deg,${cpal.main},${cpal.mid})${isQ?';padding:28px 20px;text-align:center;display:flex;align-items:center;justify-content:center':''}">
+          <div class="v-icon">${icon(cIcon)}</div>
+          <div class="v-type" style="${isQ?'position:relative':''}">${TYPE_LABELS[c.cardType]||'💡 Concept'} ${sEmoji(c.status)}</div>
+          <div class="v-title" style="${isQ?'font-style:italic;text-align:center;max-width:100%':''}">${isQ?'"'+c.conceptTitle.replace(/"/g,'')+'"':c.conceptTitle}</div>
+        </div>
+        <div class="card-body">
+          <p class="card-insight">${c.insight}</p>
+          ${c.frameworkVisual?`<div style="background:var(--bg2);border-radius:var(--radius-sm);padding:12px;font-family:var(--font-mono);font-size:11px;line-height:2;text-align:center;color:var(--text2);margin-bottom:8px">${c.frameworkVisual.replace(/\n/g,'<br>')}</div>`:''}
+          <div class="card-tags">${(c.tags||[]).map(t=>`<span class="card-tag">${t}</span>`).join('')}</div>
+        </div>
+      </div>`})}
+  });
+
+  h+=`<div style="padding:8px 24px 24px"><button onclick="openAssess()" style="width:100%;padding:14px;background:${pal.main};color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer">🧪 Test My Mastery</button></div>`;
+  el.innerHTML=h;
+}
+
+// ═══ LIBRARY ═══
+function renderLibrary(){
+  const el=document.getElementById('sLibrary');
+  const a=allCards();
+  const filtered=state.libFilter==='all'?a:a.filter(c=>c.tags&&c.tags.includes(state.libFilter));
+  const tags=new Set();a.forEach(c=>(c.tags||[]).forEach(t=>tags.add(t)));
+
+  let h=`<div style="padding:32px 24px 8px"><div style="font-family:var(--font-display);font-size:24px;margin-bottom:4px">Library</div><div style="font-size:13px;color:var(--text3)">${a.length} concepts across ${state.books.length} book${state.books.length!==1?'s':''}</div></div>
+  <div class="filters"><button class="f-chip ${state.libFilter==='all'?'active':''}" onclick="state.libFilter='all';renderLibrary()">All</button>${[...tags].map(t=>`<button class="f-chip ${state.libFilter===t?'active':''}" onclick="state.libFilter='${t}';renderLibrary()">${t}</button>`).join('')}</div>
+  <div class="masonry">`;
+
+  filtered.forEach((c,i)=>{
+    const pal=PAL[c.bookPal%PAL.length];
+    const cIcon=CARD_ICONS[c.cardType]||'info';
+    const isQ=c.cardType==='quote';
+    const used=(c.useLogs||[]).length;
+    h+=`<div class="mcard ${isQ?'quote':''}" onclick="openDetail('${c.id}')" style="animation-delay:${i*0.04}s">
+      <div class="mcard-vis" style="background:linear-gradient(135deg,${pal.main},${pal.mid});${isQ?'min-height:100px;align-items:center;justify-content:center;padding:20px 14px':''}">
+        <span class="mv-status">${sEmoji(c.status)}</span>
+        <div class="mv-icon">${icon(cIcon,44)}</div>
+        ${!isQ?`<div class="mv-type">${TYPE_LABELS[c.cardType]||'CONCEPT'}</div>`:''}
+        <div class="mv-title">${isQ?'"'+c.conceptTitle.replace(/"/g,'')+'"':c.conceptTitle}</div>
+      </div>
+      <div class="mcard-body">
+        ${!isQ?`<div class="mcard-snip">${c.insight.substring(0,80)}...</div>`:''}
+        <div class="mcard-book">${c.bookTitle}</div>
+      </div>
+      ${used?`<div class="mcard-used">Used ${used}x</div>`:''}
+    </div>`});
+
+  h+=`</div>`;
+  el.innerHTML=h;
+}
+
+// ═══ DETAIL MODAL ═══
+function openDetail(id){
+  const c=findCard(id);if(!c)return;
+  const pal=PAL[c.bookPal%PAL.length];
+  const cIcon=CARD_ICONS[c.cardType]||'info';
+  const related=allCards().filter(x=>x.id!==c.id&&x.tags&&c.tags&&x.tags.some(t=>c.tags.includes(t))).slice(0,3);
+  const o=document.getElementById('detailOverlay');
+
+  o.innerHTML=`<div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div style="flex:1"><div style="font-size:10px;font-weight:600;letter-spacing:0.8px;color:${pal.main};margin-bottom:4px">${c.bookTitle.toUpperCase()} · ${c.chapter}</div><div style="font-family:var(--font-display);font-size:21px;line-height:1.3">${c.cardType==='quote'?'"'+c.conceptTitle.replace(/"/g,'')+'"':c.conceptTitle}</div></div>
+      <button class="sheet-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="sheet-section" style="border:none"><div class="ss-label">💡 The Insight</div><div class="ss-text">${c.insight}</div></div>
+    ${c.storyAnchor?`<div class="sheet-section"><div class="ss-label">📖 Story Anchor</div><div class="ss-text">${c.storyAnchor}</div></div>`:''}
+    ${c.frameworkVisual?`<div class="sheet-section"><div class="ss-label">📐 Framework</div><div style="background:var(--bg2);border-radius:var(--radius-sm);padding:12px;font-family:var(--font-mono);font-size:12px;line-height:1.8;text-align:center;color:var(--text2);white-space:pre-line">${c.frameworkVisual}</div></div>`:''}
+    <div class="sheet-section"><div class="ss-label">🎯 Situation Challenge</div><div class="ss-text">${c.situationChallenge}</div></div>
+    <div class="sheet-section"><div class="ss-label">⚡ Your Action</div><div class="action-box" style="background:${pal.light};color:${pal.main}"><span class="cs-label" style="color:${pal.main}">Try this →</span><p style="color:${pal.main} !important">${c.actionPrompt}</p></div></div>
+    ${c.bookPurpose?`<div class="sheet-section"><div class="ss-label">🧭 Your Purpose</div><div class="ss-text" style="font-style:italic;color:var(--text3)">${c.bookPurpose}</div></div>`:''}
+    ${related.length?`<div class="sheet-section"><div class="ss-label">🔗 Related</div><div style="display:flex;flex-wrap:wrap;gap:6px">${related.map(r=>`<span onclick="event.stopPropagation();closeDetail();setTimeout(()=>openDetail('${r.id}'),300)" style="padding:6px 12px;border-radius:8px;background:var(--bg2);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer">↗ ${r.conceptTitle}</span>`).join('')}</div></div>`:''}
+    <div style="padding:8px 20px 24px">
+      <div class="card-rating" style="padding:0">
+        <button class="rate-btn rate-got" onclick="rate('${c.id}','mastered')">✅ Got it</button>
+        <button class="rate-btn rate-shaky" onclick="rate('${c.id}','review')">🔄 Shaky</button>
+        <button class="rate-btn rate-new" onclick="rate('${c.id}','new')">🆕 Revisit</button>
+      </div>
+      <button onclick="logUsed('${c.id}');closeDetail()" style="width:100%;margin-top:8px;padding:12px;border-radius:var(--radius-sm);border:1.5px dashed var(--border);background:none;font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--text3);cursor:pointer">📝 I used this concept today</button>
+    </div>
+  </div>`;
+  o.classList.add('open');document.body.style.overflow='hidden';
+  o.onclick=e=>{if(e.target===o)closeDetail()};
+}
+function closeDetail(){document.getElementById('detailOverlay').classList.remove('open');document.body.style.overflow=''}
+
+// ═══ RATE & LOG ═══
+function rate(id,rating){
+  for(const b of state.books){const c=b.cards.find(x=>x.id===id);if(!c)continue;
+    if(rating==='mastered'){c.srs.reps++;c.srs.ease=Math.min(3,c.srs.ease+0.1);c.srs.interval=c.srs.interval===0?1:Math.round(c.srs.interval*c.srs.ease);c.status=c.srs.reps>=3?'mastered':'review'}
+    else if(rating==='review'){c.srs.ease=Math.max(1.3,c.srs.ease-0.15);c.srs.interval=Math.max(1,Math.round(c.srs.interval*0.6));c.status='review'}
+    else{c.srs.reps=0;c.srs.interval=0;c.srs.ease=2.5;c.status='new'}
+    c.srs.next=Date.now()+c.srs.interval*86400000;
+    const chs={};b.cards.forEach(cd=>{if(!chs[cd.chapter])chs[cd.chapter]=[];chs[cd.chapter].push(cd)});
+    let ul=1;Object.keys(chs).forEach((cn,i)=>{const cc=chs[cn];const cm=cc.filter(x=>x.status==='mastered'||x.status==='review').length;if(cm/cc.length>=0.6)ul=Math.max(ul,i+2)});
+    b.chaptersUnlocked=Math.min(ul,Object.keys(chs).length);
+    save();break}
+  closeDetail();renderAll();
+  toast(rating==='mastered'?'Moving forward 🎯':rating==='review'?'See this again soon':'Starting fresh')}
+
+function logUsed(id){for(const b of state.books){const c=b.cards.find(x=>x.id===id);if(c){if(!c.useLogs)c.useLogs=[];c.useLogs.push(Date.now());c.srs.reps++;if(c.srs.reps>=3)c.status='mastered';else if(c.srs.reps>=1)c.status='review';break}}save();toast('Real application = deep learning 🎯');renderAll()}
+
+// ═══ ASSESS ═══
+function openAssess(){
+  const m=masteryByTag(),a=allCards();
+  const mc2=a.filter(c=>c.status==='mastered').length,total=a.length;
+  const ov=total?Math.round(mc2/total*100):0;
+  const sorted=Object.entries(m).sort((a,b)=>a[1]-b[1]);
+  const weak=sorted.slice(0,3),strong=sorted.slice(-2).reverse();
+  const nf=weak[0]?weak[0][0]:'communication';
+  const next=a.filter(c=>c.status==='new'&&c.tags&&c.tags.includes(nf)).slice(0,3);
+
+  const o=document.getElementById('detailOverlay');
+  o.innerHTML=`<div class="sheet" style="max-width:500px"><div class="sheet-handle"></div>
+    <div style="padding:20px 20px 0"><button class="sheet-close" onclick="closeDetail()" style="float:right">✕</button><h2 style="font-family:var(--font-display);font-size:22px">Mastery Report</h2></div>
+    <div style="padding:20px;text-align:center"><span style="font-family:var(--font-display);font-size:48px;color:#1D9E75">${ov}%</span><div style="font-size:13px;color:var(--text3);margin-top:2px">${mc2} of ${total} mastered</div></div>
+    <div style="padding:0 20px 20px">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:12px">STRENGTH MAP</div>
+      ${Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([t,p])=>{const cl=p>=70?'#1D9E75':p>=40?'#BA7517':'#C84B31';return`<div class="gap-item"><div class="gap-label">${t}</div><div class="gap-bar"><div class="gap-fill" style="width:${p}%;background:${cl}"></div></div><div class="gap-pct" style="color:${cl}">${p}%</div></div>`}).join('')}
+    </div>
+    <div style="padding:0 20px 20px"><div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px"><div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:8px">NEXT STEPS</div>
+      ${weak[0]?`<p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:10px">Focus on <strong>${weak[0][0]}</strong> (${weak[0][1]}%) — your biggest growth area.</p>`:''}
+      ${next.length?next.map(c=>`<div onclick="closeDetail();openDetail('${c.id}')" style="padding:8px 12px;background:var(--bg);border-radius:8px;margin-bottom:6px;font-size:13px;cursor:pointer">↗ ${c.conceptTitle} <span style="color:var(--text3);font-size:11px">· ${c.bookTitle}</span></div>`).join(''):'<p style="font-size:13px;color:var(--text3)">Keep reviewing!</p>'}
+    </div></div>
+    <div style="padding:0 20px 24px"><button onclick="closeDetail()" style="width:100%;padding:14px;border-radius:var(--radius-sm);border:none;background:var(--text);color:#fff;font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer">Back to Learning</button></div>
+  </div>`;
+  o.classList.add('open');document.body.style.overflow='hidden';
+  o.onclick=e=>{if(e.target===o)closeDetail()};
+}
+
+// ═══ ADD BOOK ═══
+let addMode='upload';
+let selectedFile=null;
+
+function openAdd(){
+  const el=document.getElementById('addScreen');
+  el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <h1 style="font-family:var(--font-display);font-size:24px;margin:0">Add a Book</h1>
+      <button onclick="closeAdd()" style="width:36px;height:36px;border-radius:50%;background:var(--bg2);border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3)">✕</button>
+    </div>
+    <div class="add-options">
+      <div class="add-opt ${addMode==='upload'?'selected':''}" onclick="addMode='upload';openAdd()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <h3>Upload PDF</h3>
+        <p>Best quality — cards from actual book text</p>
+      </div>
+      <div class="add-opt ${addMode==='ai'?'selected':''}" onclick="addMode='ai';openAdd()">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <h3>Generate with AI</h3>
+        <p>Just enter title — Claude generates cards</p>
+      </div>
+    </div>
+    <div class="add-form">
+      ${addMode==='upload'?`
+        <div class="file-drop" onclick="document.getElementById('pdfInput').click()" id="dropZone">
+          <svg viewBox="0 0 24 24">${ICONS.upload}</svg>
+          <p>Tap to select PDF from your device</p>
+          <div class="file-name" id="fileName"></div>
+          <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="handleFile(this)">
+        </div>
+      `:`
+        <label>Book Title</label>
+        <input type="text" id="bookTitleIn" placeholder="e.g. Atomic Habits">
+      `}
+      <label>Why are you learning this?</label>
+      <textarea id="bookPurposeIn" placeholder="e.g. To attract premium hospital clients"></textarea>
+      <div class="add-btns">
+        <button class="btn-cancel" onclick="closeAdd()">Cancel</button>
+        <button class="btn-go" onclick="${addMode==='upload'?'processUpload()':'generateAI()'}">
+          ${addMode==='upload'?'Process Book':'Generate Cards'}
+        </button>
+      </div>
+      <div class="loading" id="addLoading" style="display:none">
+        <div class="spinner"></div>
+        <p id="loadingMsg">Processing PDF...</p>
+      </div>
+    </div>`;
+  el.classList.add('open');
+}
+function closeAdd(){document.getElementById('addScreen').classList.remove('open');selectedFile=null}
+
+function handleFile(input){
+  if(input.files&&input.files[0]){
+    selectedFile=input.files[0];
+    document.getElementById('fileName').textContent=selectedFile.name;
+    document.getElementById('dropZone').style.borderColor='#1D9E75';
+  }
+}
+
+// ═══ PDF PROCESSING ═══
+async function processUpload(){
+  if(!selectedFile){toast('Select a PDF first');return}
+  const purpose=document.getElementById('bookPurposeIn')?.value.trim()||'';
+  showLoading('Extracting text from PDF...');
+
+  try{
+    const buf=await selectedFile.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let fullText='';const pages=pdf.numPages;
+
+    for(let i=1;i<=pages;i++){
+      if(i%20===0)updateLoading(`Reading page ${i} of ${pages}...`);
+      const page=await pdf.getPage(i);
+      const content=await page.getTextContent();
+      const text=content.items.map(item=>item.str).join(' ');
+      fullText+=text+'\n\n---PAGE_BREAK---\n\n';
+    }
+
+    updateLoading('Detecting chapters...');
+    const chapters=detectChapters(fullText);
+
+    updateLoading('Compressing and storing...');
+    const title=selectedFile.name.replace('.pdf','').replace(/[_-]/g,' ');
+    const compressed=compressText(fullText);
+
+    const pi=state.books.length%PAL.length;
+    const newBook={
+      id:'book-'+Date.now(),title,purpose,palette:pi,
+      chaptersUnlocked:1,phase:'hook',
+      bookText:compressed,
+      chapterMap:chapters,
+      cards:[]
+    };
+
+    updateLoading('Generating first cards with AI...');
+    const firstChapterText=decompressText(compressed).substring(0,4000);
+    await generateInitialCards(newBook,firstChapterText);
+
+    state.books.push(newBook);
+    state.selectedBook=state.books.length-1;
+    save();closeAdd();renderAll();
+    toast(`"${title}" added with ${newBook.cards.length} concepts!`);
+  }catch(e){
+    console.error(e);
+    hideLoading();
+    toast('Error processing PDF — check console');
+  }
+}
+
+function detectChapters(text){
+  const lines=text.split('\n');
+  const chapters=[];
+  const chPattern=/^(chapter|ch\.?|part)\s*\d+/i;
+  let currentCh='Introduction';let currentStart=0;
+
+  lines.forEach((line,i)=>{
+    const trimmed=line.trim();
+    if(chPattern.test(trimmed)||(/^[A-Z\s]{10,50}$/.test(trimmed)&&trimmed.length<60)){
+      if(i>currentStart+20){
+        chapters.push({name:currentCh,startLine:currentStart,endLine:i});
+        currentCh=trimmed.substring(0,60);currentStart=i;
+      }
+    }
+  });
+  chapters.push({name:currentCh,startLine:currentStart,endLine:lines.length});
+  return chapters.length>0?chapters:[{name:'Full Book',startLine:0,endLine:lines.length}];
+}
+
+function compressText(text){
+  try{return btoa(unescape(encodeURIComponent(text.substring(0,200000))))}
+  catch(e){return btoa(unescape(encodeURIComponent(text.substring(0,50000))))}
+}
+function decompressText(data){
+  try{return decodeURIComponent(escape(atob(data)))}catch(e){return''}
+}
+
+async function generateInitialCards(book,chapterText){
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3000,
+    messages:[{role:'user',content:`From this book text, generate 6 learning cards. Learner: operations manager, 100-200 employees, hospital document management.
+
+Book text (first chapter): ${chapterText.substring(0,3000)}
+
+Return ONLY valid JSON: {"cards":[{"chapter":"Ch N: Name","cardType":"concept|framework|quote","conceptTitle":"title","insight":"2-3 sentences","storyAnchor":"example or empty","situationChallenge":"ops scenario","actionPrompt":"micro-action","tags":["2-3 tags"],"chapterNum":1,"frameworkVisual":"for frameworks only, else empty"}]}
+
+Rules: 4 concepts, 1 framework with visual, 1 quote. Make situation challenges specific to hospital ops management.`}]})});
+    const data=await r.json();
+    let txt=data.content[0].text.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(txt);
+    if(parsed.cards){
+      book.cards=parsed.cards.map((c,i)=>mc('pdf'+Date.now()+'_'+i,c.chapter||'Ch 1',c.cardType,c.conceptTitle,c.insight,c.storyAnchor||'',c.situationChallenge,c.actionPrompt,c.tags,c.chapterNum||1,c.frameworkVisual||''));
+    }
+  }catch(e){
+    console.error('AI generation failed, creating placeholders',e);
+    book.cards=[
+      mc('ph'+Date.now()+'_0','Ch 1: Core Ideas','concept','Key concept from '+book.title,'The first key insight from this book will appear here. Open the app when connected to internet to generate AI-powered cards.','','How would you apply this book\'s main idea to your team?','Read the first chapter and note one actionable takeaway.',['leadership','self-awareness'],1),
+      mc('ph'+Date.now()+'_1','Ch 1: Core Ideas','concept','Core Framework','The main framework from this book. Try regenerating when online for richer content.','','What framework from this book could you apply this week?','Identify the book\'s central model and sketch it on paper.',['decision-making','productivity'],1)
+    ];
+  }
+}
+
+// ═══ AI GENERATE (no PDF) ═══
+async function generateAI(){
+  const title=(document.getElementById('bookTitleIn')?.value||'').trim();
+  const purpose=(document.getElementById('bookPurposeIn')?.value||'').trim();
+  if(!title){toast('Enter a book title');return}
+  showLoading('Claude is reading the book...');
+
+  const steps=['Analyzing structure','Extracting concepts','Creating challenges','Building actions'];
+  let si=0;const iv=setInterval(()=>{si=(si+1)%steps.length;updateLoading(steps[si])},2500);
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,
+    messages:[{role:'user',content:`Generate learning cards for "${title}". Learner: operations manager, 100-200 employees, hospital document management. Purpose: "${purpose||'Apply in daily work'}".
+Generate EXACTLY 8 cards across 3-4 chapters. Return ONLY valid JSON:
+{"cards":[{"chapter":"Ch N: Theme","cardType":"concept|framework|quote","conceptTitle":"title","insight":"2-3 sentences","storyAnchor":"example or empty","situationChallenge":"ops scenario","actionPrompt":"micro-action","tags":["2-3 tags"],"chapterNum":1,"frameworkVisual":"for frameworks, else empty"}]}
+Rules: 5 concepts, 2 frameworks with frameworkVisual, 1 quote.`}]})});
+    clearInterval(iv);
+    const data=await r.json();
+    let txt=data.content[0].text.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(txt);
+    const pi=state.books.length%PAL.length;
+    const nb={id:'book-'+Date.now(),title,purpose,palette:pi,chaptersUnlocked:1,phase:'learn',bookText:null,
+      cards:parsed.cards.map((c,i)=>mc('ai'+Date.now()+'_'+i,c.chapter,c.cardType,c.conceptTitle,c.insight,c.storyAnchor||'',c.situationChallenge,c.actionPrompt,c.tags,c.chapterNum||1,c.frameworkVisual||''))};
+    state.books.push(nb);state.selectedBook=state.books.length-1;save();closeAdd();renderAll();
+    toast(`"${title}" added with ${nb.cards.length} concepts!`);
+  }catch(e){
+    clearInterval(iv);console.error(e);
+    // Fallback to built-in library
+    const fb=findFallback(title);
+    const pi=state.books.length%PAL.length;
+    if(fb){
+      state.books.push({id:'book-'+Date.now(),title:fb.title,purpose:purpose||fb.purpose||'',palette:pi,chaptersUnlocked:1,phase:'learn',bookText:null,
+        cards:fb.cards.map((c,i)=>mc('fb'+Date.now()+'_'+i,c.ch,c.type,c.t,c.i,c.s,c.sc,c.a,c.tags,c.cn,c.fw))});
+      state.selectedBook=state.books.length-1;save();closeAdd();renderAll();
+      toast(`"${fb.title}" added with ${fb.cards.length} concepts!`);
+    }else{
+      state.books.push({id:'book-'+Date.now(),title,purpose,palette:pi,chaptersUnlocked:1,phase:'learn',bookText:null,
+        cards:[mc('ph'+Date.now(),'Ch 1: Core Ideas','concept','Key concept from '+title,'Cards will be generated when connected to internet. Try again later or upload the PDF.','','How would you apply this book\'s main idea?','Read the first chapter and note one takeaway.',['leadership','self-awareness'],1)]});
+      state.selectedBook=state.books.length-1;save();closeAdd();renderAll();
+      toast('Added — retry when online for richer cards');
+    }
+  }
+}
+
+function findFallback(title){
+  const k=title.toLowerCase().replace(/[^a-z0-9]/g,'');
+  for(const[key,val]of Object.entries(FALLBACK_BOOKS)){
+    if(k.includes(key.substring(0,8))||key.includes(k.substring(0,8)))return val;
+  }return null;
+}
+
+// ═══ FALLBACK BOOK LIBRARY ═══
+const FALLBACK_BOOKS={
+atomichabits:{title:'Atomic Habits',purpose:'Build better daily routines',cards:[
+{ch:'Ch 1: Fundamentals',type:'concept',t:'The 1% Rule',i:'Get 1% better each day = 37x better in a year. Small habits compound into remarkable results.',s:'British cycling went from mediocre to dominant by improving every tiny thing by 1%.',sc:'Your TLs skip small process steps. How would you frame "1% matters"?',a:'Identify one tiny improvement in your morning routine. Do it today.',tags:['habits','productivity'],cn:1},
+{ch:'Ch 1: Fundamentals',type:'framework',t:'4 Laws of Behavior Change',i:'Every habit: Cue → Craving → Response → Reward. Design each step to build good habits.',s:'',sc:'Employee always late. Map to 4 laws — where to intervene?',a:'Pick one habit to build. Design the cue — make it obvious.',tags:['habits','productivity','leadership'],cn:1,fw:'1️⃣ CUE → Make it OBVIOUS\n2️⃣ CRAVING → Make it ATTRACTIVE\n3️⃣ RESPONSE → Make it EASY\n4️⃣ REWARD → Make it SATISFYING'},
+{ch:'Ch 2: Identity',type:'concept',t:'Identity-Based Habits',i:'Don\'t focus on goals. Focus on who you want to become. Every action votes for your identity.',s:'"No thanks, I\'m not a smoker" vs "I\'m trying to quit." Identity vs outcome.',sc:'TL says "I\'m not a morning person." How to shift their identity?',a:'Instead of "I need to exercise," say "I am someone who moves daily."',tags:['mindset','self-awareness'],cn:2},
+{ch:'Ch 2: Identity',type:'quote',t:'You fall to the level of your systems',i:'Goals are about what you want. Systems are the processes. Winners and losers share goals — systems differ.',s:'',sc:'Team has SLA targets but keeps missing. Problem: goal or system?',a:'Pick one goal. Write the daily system that makes it inevitable.',tags:['productivity','leadership'],cn:2},
+{ch:'Ch 3: Environment',type:'concept',t:'Environment Design > Willpower',i:'People with great self-control structure their environment so they rarely need it.',s:'Employees who kept healthy snacks on desk ate 3x more healthy food — no willpower.',sc:'Error rate is high. Instead of training, what environmental changes reduce errors?',a:'Rearrange one thing to make your most important task easier to start.',tags:['productivity','habits'],cn:3},
+{ch:'Ch 3: Environment',type:'concept',t:'Habit Stacking',i:'Link new habit to existing one: "After I [CURRENT], I will [NEW]." Existing routines become anchors.',s:'Manager: "After morning coffee, I send one appreciation message."',sc:'Want TLs to check quality reports daily. What habit to stack onto?',a:'Choose a habit. Stack it: "After I ____, I will ____."',tags:['habits','productivity'],cn:3}
+]},
+deepwork:{title:'Deep Work',purpose:'Maximize focused productivity',cards:[
+{ch:'Ch 1: Deep vs Shallow',type:'framework',t:'Deep Work vs Shallow Work',i:'Deep: cognitively demanding, uninterrupted focus. Shallow: emails, meetings. Most drown in shallow.',s:'Carl Jung built a stone tower with no electricity to write his important works.',sc:'How much of your day is deep work (strategy) vs shallow (emails)?',a:'Block one 90-minute deep work session tomorrow. No phone, one task.',tags:['productivity','self-awareness'],cn:1,fw:'🧠 DEEP → Strategy, coaching design\n📧 SHALLOW → Emails, approvals, logistics'},
+{ch:'Ch 1: Deep vs Shallow',type:'concept',t:'Attention Residue',i:'Switching tasks leaves "residue" — part of your attention stays behind for ~20 minutes.',s:'Checking email between tasks doesn\'t take "a second" — it degrades your next 20 minutes.',sc:'TLs multitask between supervision and reporting. Could residue explain quality drops?',a:'Before next important task, close all unrelated tabs. Give brain 2 minutes to clear.',tags:['productivity','decision-making'],cn:1}
+]}
+};
+
+// ═══ LOADING HELPERS ═══
+function showLoading(msg){
+  const f=document.querySelector('.add-form');
+  if(f){const btns=f.querySelector('.add-btns');if(btns)btns.style.display='none'}
+  const l=document.getElementById('addLoading');
+  if(l){l.style.display='block';document.getElementById('loadingMsg').textContent=msg}
+}
+function updateLoading(msg){const m=document.getElementById('loadingMsg');if(m)m.textContent=msg}
+function hideLoading(){const l=document.getElementById('addLoading');if(l)l.style.display='none';
+  const f=document.querySelector('.add-form');if(f){const btns=f.querySelector('.add-btns');if(btns)btns.style.display='flex'}}
+
+// ═══ INIT ═══
+function renderAll(){renderToday();renderLearn();renderLibrary()}
+window.resetBookBites=function(){localStorage.removeItem('bb3');location.reload()};
+load();renderAll();
+</script>
+</body>
+</html>
